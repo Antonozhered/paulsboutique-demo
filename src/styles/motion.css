@@ -1,0 +1,399 @@
+/* motion.css — reveals, transitions, keyframes, hover motion, marquee.
+ *
+ * Every hidden start-state in this file is scoped under `html.js` (the class is set by the
+ * inline script in BaseHead, as early as possible). Without JavaScript the `.js` class is
+ * never added, none of these start-states apply, and the page renders fully visible:
+ * no blank sections, no invisible headings, no off-screen action bar.
+ *
+ * This file owns motion only. Colour, spacing, typography and layout live in global.css;
+ * custom properties live in tokens.css. Duration tokens carry fallbacks so the file stays
+ * correct on its own: --dur-fast 180ms, --dur-base 300ms, --dur-slow 700ms (opacity),
+ * --dur-transform 900ms.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Reveal system — [data-reveal] + .is-visible (added once by src/lib/reveal.ts)
+ * ------------------------------------------------------------------------- */
+
+/* --delay (een bewuste vertraging, bv. de sticker) en --i (de plaats in een lijst)
+ * tellen op, zodat een componentregel met --delay niet hoeft te vechten met de
+ * stagger. Callers cappen --i op 6: een lange lijst wacht nooit langer dan 480ms. */
+.js [data-reveal] {
+  transition:
+    opacity var(--dur-slow, 700ms) var(--ease-out),
+    transform var(--dur-transform, 900ms) var(--ease-out);
+  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * 80ms);
+  will-change: opacity, transform;
+}
+
+.js [data-reveal='up'] {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.js [data-reveal='scale'] {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.js [data-reveal='pop'] {
+  opacity: 0;
+  transform: scale(0.6) rotate(-20deg);
+}
+
+/* Leaves grow out of their corner. No opacity: they are flat illustrations and fading
+ * them reads as a glitch against the dark sections. */
+.js [data-reveal='grow'] {
+  transform: scale(0.4) rotate(-12deg);
+}
+
+/* A leaf grows from the corner it is anchored to, via the .leaf--* placement hooks. */
+.js [data-reveal='grow'].leaf--tl { transform-origin: top left; }
+.js [data-reveal='grow'].leaf--tr { transform-origin: top right; }
+.js [data-reveal='grow'].leaf--bl { transform-origin: bottom left; }
+.js [data-reveal='grow'].leaf--br { transform-origin: bottom right; }
+
+/* The rest state. `transform: none` would flatten an element that is *supposed* to sit
+ * rotated — the OriginalSticker is tilted by design — so the rest rotation is restored
+ * through the standalone `rotate` property. The sticker declares `--rest-rotate: 10deg`
+ * on itself and therefore settles at 10deg instead of 0deg; everything else defaults to
+ * 0deg and is unaffected. */
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+  rotate: var(--rest-rotate, 0deg);
+}
+
+/* De sticker staat in global.css standaard op 10deg. Zonder deze regel zou de
+ * generieke 0deg-fallback hierboven (hogere specificiteit) hem plat trekken op het
+ * moment dat hij onthuld wordt. */
+.js .sticker[data-reveal].is-visible {
+  rotate: var(--rest-rotate, 10deg);
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Staggered lists — menu items, shop cards, atmosphere photos
+ * ------------------------------------------------------------------------- */
+
+/* De stagger zit in de transition-delay hierboven. Een lijst zet alleen --i per item
+ * (gecapt op 6); een los element zet --delay. Geen aparte regel meer, zodat een
+ * componentregel met --delay niet stilzwijgend overschreven wordt. */
+
+/* ---------------------------------------------------------------------------
+ * 3. SplitText — words slide up out of a mask
+ * ------------------------------------------------------------------------- */
+
+/* De mask (.split__word) en de inline-block van .split__inner staan in global.css;
+ * hier alleen de beweging. De woordvertraging telt de SplitText-prop "delay"
+ * (--delay op .split) op bij de stagger van 60ms per woord. */
+.js .split__inner {
+  transform: translateY(110%) rotate(4deg);
+  transition: transform var(--dur-transform, 900ms) var(--ease-out);
+  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * 60ms);
+}
+
+.js .split.is-visible .split__inner {
+  transform: none;
+}
+
+/* The .sr-only copy carries the full sentence for screen readers and is never animated. */
+
+/* ---------------------------------------------------------------------------
+ * 4. Hero photo
+ * ------------------------------------------------------------------------- */
+
+/* TRANSFORM ONLY. The hero burger is the LCP element: animating its opacity would push
+ * Largest Contentful Paint to the end of the transition and cost us the Lighthouse
+ * score. It scales, it never fades. The end state keys on .is-visible on the photo
+ * itself or on a revealed ancestor. */
+.js .hero .frame img,
+.js .hero__photo img {
+  transform: scale(1.06);
+  transition: transform var(--dur-transform, 900ms) var(--ease-out);
+}
+
+.js .hero .frame.is-visible img,
+.js .hero .is-visible .frame img,
+.js .hero__photo.is-visible img,
+.js .hero__photo img.is-visible,
+.js .is-visible .hero__photo img {
+  transform: scale(1);
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Marquee
+ * ------------------------------------------------------------------------- */
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* De track houdt twee identieke groepen, dus -50% landt exact op de naad. De flexrij
+ * en inline-size: max-content staan in global.css; hier alleen de animatie. */
+.marquee__track {
+  animation: marquee-scroll var(--marquee-duration, 40s) linear infinite;
+}
+
+.marquee--reverse .marquee__track {
+  animation-direction: reverse;
+}
+
+/* Pauses on hover and through the visible pause button (WCAG 2.2.2). */
+.marquee:hover .marquee__track,
+.marquee[data-paused='true'] .marquee__track {
+  animation-play-state: paused;
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. Leaf sway — scroll-driven, progressive enhancement only
+ * ------------------------------------------------------------------------- */
+
+/* The sway uses the standalone `rotate` property instead of a rotate() inside
+ * `transform`. `transform` is already owned by the reveal (scale + translate), and
+ * `rotate` is a separate animatable property, so the two compose instead of the sway
+ * wiping out the reveal transform mid-flight. */
+@keyframes leaf-sway {
+  from { rotate: -6deg; }
+  to { rotate: 6deg; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .leaf {
+      animation: leaf-sway linear both;
+      animation-timeline: view();
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. Hover — pointer devices only, never on touch
+ * ------------------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .btn {
+    transition: transform var(--dur-fast, 180ms) var(--ease-out);
+  }
+
+  .btn:hover {
+    transform: scale(1.03);
+  }
+
+  .frame img {
+    transition: transform var(--dur-base, 300ms) var(--ease-out);
+  }
+
+  /* De hero-foto niet: die wordt al door de LCP-zoom hierboven bestuurd en zou
+     tijdens de reveal van scale(1.06) naar scale(1.04) springen. */
+  .frame:not(.hero__photo):hover img {
+    transform: scale(1.04);
+  }
+
+  .hero .frame:hover img {
+    transform: none;
+  }
+
+  /* One single wiggle, then back to rest. No loop, no bounce. */
+  .sticker:hover {
+    animation: sticker-wiggle 600ms var(--ease-out) 1;
+  }
+}
+
+/* Rotates around the sticker's own rest rotation and ends exactly on it. */
+@keyframes sticker-wiggle {
+  0% { rotate: var(--rest-rotate, 0deg); }
+  30% { rotate: calc(var(--rest-rotate, 0deg) - 3deg); }
+  65% { rotate: calc(var(--rest-rotate, 0deg) + 2deg); }
+  100% { rotate: var(--rest-rotate, 0deg); }
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. ActionBar — slides in once the hero CTA has left the viewport
+ * ------------------------------------------------------------------------- */
+
+.js .actionbar {
+  transform: translateY(110%);
+  transition: transform var(--dur-base, 300ms) var(--ease-out);
+}
+
+.js .actionbar.is-visible {
+  transform: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. OrderSheet — bottom sheet on phones, centred card on desktop
+ * ------------------------------------------------------------------------- */
+
+/* Below 640px the dialog slides up from the bottom edge. `@starting-style` supplies the
+ * entry value and `allow-discrete` keeps the element in the top layer while it slides
+ * back out. Fallback: a browser without @starting-style or discrete transitions simply
+ * shows the sheet in its final position — it appears instantly, correctly placed, and is
+ * never left off-screen, because a closed <dialog> is display: none anyway. */
+@media (max-width: 639px) {
+  .order-sheet {
+    transform: translateY(100%);
+    transition:
+      transform var(--dur-base, 300ms) var(--ease-out),
+      overlay var(--dur-base, 300ms) var(--ease-out) allow-discrete,
+      display var(--dur-base, 300ms) var(--ease-out) allow-discrete;
+  }
+
+  .order-sheet[open] {
+    transform: translateY(0);
+  }
+
+  @starting-style {
+    .order-sheet[open] {
+      transform: translateY(100%);
+    }
+  }
+}
+
+/* From 640px up it is a centred card: it fades, it does not travel. */
+@media (min-width: 640px) {
+  .order-sheet {
+    opacity: 0;
+    transition:
+      opacity var(--dur-base, 300ms) var(--ease-out),
+      overlay var(--dur-base, 300ms) var(--ease-out) allow-discrete,
+      display var(--dur-base, 300ms) var(--ease-out) allow-discrete;
+  }
+
+  .order-sheet[open] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .order-sheet[open] {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. Nooit animeren
+ * ------------------------------------------------------------------------- */
+
+/* These elements carry information people act on: an open/closed state, a price, a phone
+ * button, a row of opening hours. They must be readable and tappable the instant they are
+ * on screen. Locked down here so no inherited or later rule animates them. (A revealed
+ * container around them may still move — that is the container's transform, not theirs.) */
+.open-status,
+.open-status__dot,
+.menu-item__price,
+.actionbar__item,
+.order-sheet__option,
+.hours-table,
+.hours-table * {
+  /* !important omdat .js [data-reveal] (0,2,0) deze enkelvoudige selectors anders
+     verslaat zodra iemand data-reveal op zo'n element zet. */
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * 10b. Menufilter — korte fade tussen states
+ * ------------------------------------------------------------------------- */
+
+/* De chips filteren op tag. Zonder fade knippert de lijst; global.css mag geen
+ * transitions bevatten, dus de overgang staat hier. De prijs zelf beweegt niet
+ * (zie "Nooit animeren"): alleen de rij vervaagt. */
+.js .menu-list {
+  transition: opacity var(--dur-fast, 180ms) var(--ease-out);
+}
+
+.js .menu-list[data-filtering='true'] {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * 11. Reduced motion — last block in the file, and it wins
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Everything sits at its final state immediately, revealed or not. */
+  .js [data-reveal],
+  .js [data-reveal].is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    rotate: var(--rest-rotate, 0deg) !important;
+    transition: none !important;
+  }
+
+  /* Zelfde reden als hierboven: de sticker staat stil, maar wel schuin. */
+  .js .sticker[data-reveal],
+  .js .sticker[data-reveal].is-visible {
+    rotate: var(--rest-rotate, 10deg) !important;
+  }
+
+  .js .split__inner,
+  .js .split.is-visible .split__inner {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* LCP image at its natural size, no zoom. */
+  .js .hero .frame img,
+  .js .hero__photo img {
+    transform: scale(1) !important;
+    transition: none !important;
+  }
+
+  /* Geen fade op de menufilter: direct wisselen. */
+  .js .menu-list,
+  .js .menu-list[data-filtering='true'] {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+
+  /* No sway. */
+  .leaf {
+    animation: none !important;
+  }
+
+  /* Static marquee: the text just sits there, so the pause button has nothing to pause. */
+  .marquee__track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .marquee__pause {
+    display: none !important;
+  }
+
+  /* The action bar is simply there instead of sliding in. */
+  .js .actionbar,
+  .js .actionbar.is-visible {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* The order sheet opens in place. */
+  .order-sheet,
+  .order-sheet[open] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* No hover motion. */
+  .btn:hover,
+  .frame:hover img {
+    transform: none !important;
+  }
+
+  .sticker:hover {
+    animation: none !important;
+  }
+}

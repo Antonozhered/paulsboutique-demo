@@ -1,0 +1,67 @@
+:root {
+  /* surfaces */
+  --c-jungle: #14221A;   /* darkest: mural background. Default page background */
+  --c-bottle: #24432F;   /* painted walls. Secondary dark sections */
+  --c-cream:  #FBE8CD;   /* mural leaves + paper menu. Light sections, text on dark */
+  --c-paper:  #FFF8EC;   /* student deal whiteboard card only */
+  /* leaves (decoration, badges) */
+  --c-olive:  #3C5332;
+  --c-moss:   #576A3E;
+  --c-sage:   #A2A868;   /* eyebrows on dark, open-status dot */
+  --c-peach:  #EEBF96;   /* monstera. Second headline color on dark */
+  /* accents */
+  --c-mustard:#C9A23A;   /* velvet cushions. Labels on dark, tape on the deal card */
+  --c-tile:   #4F7D78;   /* tile tables. Small accents only, never text background */
+  --c-orange: #EB7A3A;   /* orange plates. Primary actions + sticker ONLY */
+  --c-ink:    #1B1B18;   /* text on paper */
+
+  --font-display: 'Alfa Slab One', Rockwell, serif;
+  --font-label: 'Oswald Variable', 'Arial Narrow', sans-serif;
+  --font-menu: 'Courier Prime', 'Courier New', monospace;
+  --font-body: 'DM Sans Variable', system-ui, sans-serif;
+  --font-hand: 'Caveat Variable', cursive;
+
+  --step--1: clamp(0.875rem, 0.85rem + 0.1vw, 0.95rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  --step-2: clamp(1.6rem, 1.4rem + 1vw, 2.2rem);
+  --step-3: clamp(2.4rem, 1.9rem + 2.4vw, 3.8rem);
+  --step-4: clamp(3.4rem, 2.4rem + 5vw, 6.5rem);
+
+  --space-xs: 0.5rem; --space-s: 1rem; --space-m: 1.5rem;
+  --space-l: 2.5rem; --space-xl: 4rem; --space-2xl: 6rem;
+  --radius-s: 6px; --radius-m: 14px; --radius-l: 22px; --radius-pill: 999px;
+  --tap: 48px;
+  --container: 72rem;
+  --gutter: 16px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* --- afgeleide tokens (niet uit de spec) --- */
+  --c-wood: #EBDECA;                      /* fallback onder textures/wood-cream.jpg */
+  --c-jungle-90: rgb(20 34 26 / 0.92);    /* sticky header */
+  --c-ink-20: rgb(27 27 24 / 0.2);        /* gedrukte binnenrand op de dealkaart */
+
+  --shadow-card: 0 1px 2px rgb(10 18 13 / 0.18), 0 12px 28px -12px rgb(10 18 13 / 0.38);
+  --shadow-sticker: 0 6px 16px -6px rgb(10 18 13 / 0.45);
+  --shadow-sheet: 0 -4px 12px -6px rgb(10 18 13 / 0.3), 0 24px 60px -20px rgb(10 18 13 / 0.55);
+
+  --header-h: 64px;
+
+  --z-leaf: 0;
+  --z-content: 1;
+  --z-header: 50;
+  --z-actionbar: 60;
+  --z-sheet: 70;
+
+  --focus-ring: 2px;
+  --focus-offset: 3px;
+
+  --leading-display: 0.95;
+  --track-label: 0.1em;
+  --measure: 62ch;
+
+  --dur-fast: 180ms;
+  --dur-base: 300ms;
+  --dur-slow: 700ms;
+  --dur-transform: 900ms;
+}
