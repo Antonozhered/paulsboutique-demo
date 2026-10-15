@@ -1,0 +1,93 @@
+---
+/**
+ * ActionBar.astro — vaste balk onderaan op mobiel (< 768px): Bestel · Bel · Route.
+ *
+ * Doel 2 (converteren) in een duim: waar je ook bent op de pagina, bestellen, bellen of de
+ * route openen is een tap. Bel en Route gaan naar de hoofdshop; Bestel opent de OrderSheet,
+ * waar je nog van shop kunt wisselen.
+ *
+ * Zolang de bestelknoppen in de hero in beeld zijn, is de balk overbodig en staat hij weg.
+ * Hij schuift binnen zodra dat blok uit beeld is (IntersectionObserver op [data-hero-cta]).
+ * Weggeschoven is hij `inert`, zodat de tabtoets niet op onzichtbare knoppen belandt.
+ * Zonder JS, zonder hero of met prefers-reduced-motion staat hij er gewoon altijd.
+ *
+ * BaseLayout zet hem alleen op pagina's die erom vragen (niet op /vergelijking) en geeft de
+ * body dan onderaan ruimte, zodat de balk nooit iets bedekt. De inhoud beweegt nooit; alleen
+ * de balk als geheel schuift (motion.css).
+ */
+import { getShop } from '../data/shops';
+import { telHref } from '../lib/format';
+
+const shop = getShop('kortrijk-centrum');
+---
+
+{
+  shop && (
+    <nav class="actionbar" aria-label="Snelle acties" data-actionbar>
+      <button type="button" class="actionbar__item actionbar__item--primary" data-order-open>
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 8h14l-1.2 12H6.2L5 8Z" />
+            <path d="M9 8V6.5a3 3 0 0 1 6 0V8" />
+          </g>
+        </svg>
+        <span>Bestel</span>
+      </button>
+
+      <a class="actionbar__item" href={telHref(shop.phone)}>
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>Bel</span>
+        <span class="sr-only"> {shop.name}</span>
+      </a>
+
+      <a class="actionbar__item" href={shop.mapsUrl} target="_blank" rel="noopener">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </g>
+        </svg>
+        <span>Route</span>
+        <span class="sr-only"> naar {shop.name}</span>
+      </a>
+    </nav>
+  )
+}
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-actionbar]');
+  const heroCta = document.querySelector<HTMLElement>('[data-hero-cta]');
+
+  if (bar) {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Met een hero: weg tot de observer zegt dat de knoppen daar uit beeld zijn. Zo flitst
+    // de balk niet even binnen en weer weg bij het laden.
+    let heroCtaInView = heroCta !== null && typeof IntersectionObserver !== 'undefined';
+
+    const sync = () => {
+      const show = reduceMotion.matches || !heroCtaInView;
+      bar.classList.toggle('is-visible', show);
+      bar.inert = !show;
+    };
+
+    if (heroCta && typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(([entry]) => {
+        heroCtaInView = entry.isIntersecting;
+        sync();
+      });
+      observer.observe(heroCta);
+    }
+
+    reduceMotion.addEventListener('change', sync);
+    sync();
+  }
+</script>

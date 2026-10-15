@@ -1,0 +1,45 @@
+---
+/**
+ * OtherShops.astro — de andere Paul's in België, als eenvoudige lijst.
+ *
+ * Op de oude site leidden de links naar de andere shops naar lege pagina's. Hier staat per
+ * shop gewoon wat werkt: het adres, een klikbaar nummer, de route en (als die bestaat) de
+ * eigen website of Facebookpagina. Geen uren: die kennen we niet, dus die tonen we niet.
+ */
+import { otherShops } from '../data/shops';
+import { telHref } from '../lib/format';
+
+/** Een Facebookpagina noemen we zo; al de rest is een website. */
+const siteLabel = (url: string) => (/facebook\.com/i.test(url) ? 'Facebook' : 'Website');
+---
+
+<div class="other-shops">
+  <h3 class="other-shops__title">Paul's buiten Kortrijk</h3>
+
+  <ul class="other-shops__list" role="list">
+    {
+      otherShops.map((shop) => (
+        <li class="other-shop">
+          <p class="other-shop__name">{shop.name}</p>
+          <p class="other-shop__address">
+            {shop.street}, {shop.postal}&nbsp;{shop.city}
+          </p>
+          <p class="other-shop__links">
+            <a class="link tabular" href={telHref(shop.phone)}>
+              {shop.phoneDisplay}
+            </a>
+            <a class="link" href={shop.mapsUrl} target="_blank" rel="noopener">
+              Route<span class="sr-only"> naar {shop.name}</span>
+            </a>
+            {shop.externalUrl && (
+              <a class="link" href={shop.externalUrl} target="_blank" rel="noopener">
+                {siteLabel(shop.externalUrl)}
+                <span class="sr-only"> van {shop.name}</span>
+              </a>
+            )}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</div>

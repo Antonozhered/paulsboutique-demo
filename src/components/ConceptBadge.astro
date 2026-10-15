@@ -1,0 +1,20 @@
+---
+/**
+ * ConceptBadge.astro — "Concept door Anton · geen officiële website".
+ *
+ * Deze demo is een privé-concept voor de eigenaar, geen officiële site van de zaak. Dat
+ * staat er altijd zichtbaar bij, zodat niemand een screenshot voor de echte site aanziet.
+ * De opmaak (mosterd kader, Oswald) staat in global.css.
+ */
+import { brand } from '../data/brand';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<p class:list={['concept-badge', className]}>
+  Concept door {brand.conceptBy} · geen officiële website
+</p>

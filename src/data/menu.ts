@@ -132,9 +132,23 @@ export const menuFilters: MenuFilter[] = [
   { id: 'cheese', label: 'Kaas', tags: ['cheese'] },
 ];
 
-/** Upgrade box: belongs under the Beefburgers category in the UI. */
-export const upgradeNote: string =
-  'Elke beefburger ook als: 100% Black Angus +€ 5 · Clash: dubbele burger op ciabatta +€ 5 · Extra beef of spek € 2,50';
+/**
+ * Upgrade box: belongs under the category with this id in the UI (Beefburgers).
+ * The options are rendered as a list; the euro sign and amount are joined by a
+ * non-breaking space so a price never wraps apart.
+ */
+export const upgrade: { category: string; title: string; options: string[] } = {
+  category: 'beef',
+  title: 'Elke beefburger ook als',
+  options: [
+    '100% Black Angus +€ 5',
+    'Clash: dubbele burger op ciabatta +€ 5',
+    'Extra beef of spek € 2,50',
+  ],
+};
+
+/** The same box as one sentence: 'Elke beefburger ook als: 100% Black Angus +€ 5 · …'. */
+export const upgradeNote: string = `${upgrade.title}: ${upgrade.options.join(' · ')}`;
 
 export const menuFootnote: string =
   "Ciabatta's, verse friet, hapjes en drankjes: bekijk alles bij het bestellen.";

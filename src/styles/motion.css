@@ -80,6 +80,18 @@
  * componentregel met --delay niet stilzwijgend overschreven wordt. */
 
 /* ---------------------------------------------------------------------------
+ * 2b. Studentdeal — kaart, bladeren, sticker
+ * ------------------------------------------------------------------------- */
+
+/* reveal.ts laat alles in de kaart samen met de kaart vertrekken; de volgorde zit in de
+ * delays. De kaart schaalt in (0 ms), de titel volgt (100 ms, SplitText-prop), de bladeren
+ * groeien uit hun hoek (150 ms) en de sticker popt als laatste (400 ms, inline via
+ * Sticker.astro) en landt op zijn 10 graden. */
+.deal-card > .leaf {
+  --delay: 150ms;
+}
+
+/* ---------------------------------------------------------------------------
  * 3. SplitText — words slide up out of a mask
  * ------------------------------------------------------------------------- */
 
@@ -297,13 +309,15 @@
  * ------------------------------------------------------------------------- */
 
 /* De chips filteren op tag. Zonder fade knippert de lijst; global.css mag geen
- * transitions bevatten, dus de overgang staat hier. De prijs zelf beweegt niet
- * (zie "Nooit animeren"): alleen de rij vervaagt. */
-.js .menu-list {
+ * transitions bevatten, dus de overgang staat hier. Het hele resultaat vervaagt, koppen
+ * van de categorieen inbegrepen (die verdwijnen ook als ze leeg zijn). De prijs zelf
+ * beweegt niet (zie "Nooit animeren"). De duur moet gelijk zijn aan FADE_MS in
+ * MenuSection.astro: daar wordt gewisseld zodra de lijst onzichtbaar is. */
+.js .menu__results {
   transition: opacity var(--dur-fast, 180ms) var(--ease-out);
 }
 
-.js .menu-list[data-filtering='true'] {
+.js .menu__results[data-filtering='true'] {
   opacity: 0;
 }
 
@@ -351,8 +365,8 @@
   }
 
   /* Geen fade op de menufilter: direct wisselen. */
-  .js .menu-list,
-  .js .menu-list[data-filtering='true'] {
+  .js .menu__results,
+  .js .menu__results[data-filtering='true'] {
     opacity: 1 !important;
     transition: none !important;
   }

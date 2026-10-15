@@ -1,0 +1,67 @@
+---
+/**
+ * Sticker.astro — de ronde oranje sticker, zoals op de papieren menukaart.
+ *
+ * Een component, twee verschijningen:
+ *  - de dealsticker: "€15" in Alfa Slab One boven "ALLES SAMEN" (zie StudentDeal)
+ *  - de "The Original"-sticker: `hand` aan, dan en alleen dan Caveat (zie OriginalSticker)
+ *
+ * De sticker is sier die bestaande tekst herhaalt. Daarom is het visuele deel altijd
+ * aria-hidden en geeft `srText` de hele zin een keer in `.sr-only` mee. Zonder `srText`
+ * is de sticker volledig onzichtbaar voor een schermlezer: dat mag alleen als de prijs
+ * er al als echte tekst naast staat.
+ */
+interface Props {
+  /** De grote regel. Bij `hand` in Caveat, anders in Alfa Slab One. */
+  price: string;
+  /** Kleine regel in Oswald onder de prijs. Weglaten voor een sticker met een regel. */
+  label?: string;
+  /**
+   * Diameter in px. Weglaten als de ouder `--sticker-size` per breakpoint zet (de
+   * dealsticker: 98 mobiel, 150 desktop): een inline waarde wint het van elke mediaquery.
+   * Zonder size en zonder ouderwaarde valt global.css terug op 98px.
+   */
+  size?: number;
+  /** Rotatie in rust. De reveal en de hover-wiggle landen hierop terug. */
+  rotate?: number;
+  /** Caveat-variant: uitsluitend voor "The Original". */
+  hand?: boolean;
+  /** De volledige zin voor schermlezers, bv. "Studentdeal: ... voor 15 euro". */
+  srText?: string;
+  /** `pop` is de stickerreveal; zet op false waar de sticker niet mag bewegen. */
+  reveal?: boolean;
+  /** Vertraging in ms, zodat de sticker na zijn kaart binnenkomt. */
+  delay?: number;
+  class?: string;
+}
+
+const {
+  price,
+  label,
+  size,
+  rotate = 10,
+  hand = false,
+  srText,
+  reveal = true,
+  delay,
+  class: className,
+} = Astro.props;
+
+const styles = [
+  size !== undefined ? `--sticker-size:${size}px` : null,
+  `--rest-rotate:${rotate}deg`,
+  delay !== undefined ? `--delay:${delay}ms` : null,
+].filter((part): part is string => part !== null);
+---
+
+{srText !== undefined && <span class="sr-only">{srText}</span>}
+
+<span
+  class:list={['sticker', { 'sticker--hand': hand }, className]}
+  style={styles.join(';')}
+  aria-hidden="true"
+  data-reveal={reveal ? 'pop' : undefined}
+>
+  <span class="sticker__price">{price}</span>
+  {label !== undefined && <span class="sticker__label">{label}</span>}
+</span>

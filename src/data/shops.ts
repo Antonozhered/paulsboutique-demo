@@ -17,6 +17,8 @@ export interface Shop {
   externalUrl?: string;
   primary: boolean;
   image?: ImageMetadata;
+  /** Verplicht zodra er een image is: wat staat er echt op de foto. */
+  imageAlt?: string;
 }
 
 /** Een adres staat precies een keer in dit bestand en voedt zowel de velden als de routeknop. */
@@ -146,6 +148,7 @@ export const shops: Shop[] = [
     mapsUrl: mapsUrl(centrumAdres),
     primary: true,
     image: kortrijkCentrumImage,
+    imageAlt: "Gevel van Paul's Kortrijk Centrum met het uithangbord, lichtjes en planten aan de deur",
   },
   {
     id: 'kortrijk-expo',

@@ -1,0 +1,215 @@
+---
+/**
+ * OrderSheet.astro — "Hoe wil je bestellen?" als native <dialog> met showModal().
+ *
+ * Elke knop met `data-order-open` opent hem: de hero, onder het menu, de shopkaarten en
+ * de ActionBar. Een waarde (`data-order-open="kortrijk-expo"`) kiest meteen die shop; zonder
+ * waarde opent hij op de standaardshop (de eerste, Centrum).
+ *
+ * Opties in vaste volgorde: eerst bellen en afhalen (snelst, en rechtstreeks bij de zaak),
+ * dan Takeaway.com en Deliveroo. Een platform zonder URL in data/shops.ts valt gewoon weg.
+ * Elke Kortrijkse shop heeft eigen nummers en eigen platformlinks, dus met meer dan een
+ * shop staat bovenaan een keuze "Centrum | Expo": native radioknoppen, geen ARIA nodig.
+ *
+ * Sluiten kan met Escape (native), de sluitknop (form method="dialog") en een klik op de
+ * backdrop; de focus gaat daarna terug naar de knop die de sheet opende. Mobiel schuift
+ * hij als bottom sheet omhoog, op desktop is het een kaart in het midden (motion.css).
+ * De opties zelf bewegen nooit.
+ *
+ * Zonder JavaScript kan niets deze dialog openen; de bestelknoppen zijn dan verborgen
+ * (global.css) en bellen en de route blijven gewoon werken.
+ */
+import { primaryShops, type Shop } from '../data/shops';
+import { telHref } from '../lib/format';
+
+interface OrderOption {
+  title: string;
+  /** Korte uitleg onder de titel. */
+  sub?: string;
+  href: string;
+  /** Rechts in de optie: het nummer, voor wie op een toestel zonder telefoon kijkt. */
+  meta?: string;
+  external: boolean;
+  primary: boolean;
+}
+
+function optionsFor(shop: Shop): OrderOption[] {
+  const options: OrderOption[] = [
+    {
+      title: 'Bel & haal af',
+      sub: 'Snelst. Rechtstreeks bij ons.',
+      href: telHref(shop.phone),
+      meta: shop.phoneDisplay,
+      external: false,
+      primary: true,
+    },
+  ];
+  if (shop.order?.takeaway) {
+    options.push({ title: 'Takeaway.com', href: shop.order.takeaway, external: true, primary: false });
+  }
+  if (shop.order?.deliveroo) {
+    options.push({ title: 'Deliveroo', href: shop.order.deliveroo, external: true, primary: false });
+  }
+  return options;
+}
+
+/**
+ * Korte namen voor de shopkeuze: het gedeelde begin valt weg.
+ * "Paul's Kortrijk Centrum" + "Paul's Kortrijk Expo" -> "Centrum" + "Expo".
+ */
+function shortNames(names: string[]): string[] {
+  const words = names.map((name) => name.split(' '));
+  const first = words[0] ?? [];
+  let shared = 0;
+  while (words.every((parts) => parts.length > shared + 1 && parts[shared] === first[shared])) {
+    shared += 1;
+  }
+  return words.map((parts) => parts.slice(shared).join(' '));
+}
+
+const shops = primaryShops;
+const defaultShop = shops[0];
+const labels = shortNames(shops.map((shop) => shop.name));
+---
+
+{
+  defaultShop && (
+    <dialog
+      class="order-sheet"
+      id="order-sheet"
+      aria-labelledby="order-sheet-title"
+      data-order-sheet
+      data-default-shop={defaultShop.id}
+    >
+      <div class="order-sheet__panel">
+        <div class="order-sheet__head">
+          <h2 class="order-sheet__title" id="order-sheet-title">
+            Hoe wil je bestellen?
+          </h2>
+          <form method="dialog">
+            <button class="order-sheet__close" aria-label="Sluiten" autofocus>
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M2 2l14 14M16 2L2 16" />
+                </g>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        {shops.length > 1 && (
+          <fieldset class="order-sheet__shops">
+            <legend class="sr-only">Kies je shop</legend>
+            {shops.map((shop, index) => (
+              <label class="order-sheet__shop">
+                <input
+                  class="sr-only"
+                  type="radio"
+                  name="order-shop"
+                  value={shop.id}
+                  checked={index === 0}
+                  data-order-shop-choice
+                />
+                <span>{labels[index]}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+
+        {shops.map((shop, index) => (
+          <ul
+            class="order-sheet__options"
+            role="list"
+            aria-label={`Bestellen bij ${shop.name}`}
+            data-order-shop={shop.id}
+            hidden={index !== 0}
+          >
+            {optionsFor(shop).map((option) => (
+              <li>
+                <a
+                  class:list={['order-sheet__option', { 'order-sheet__option--primary': option.primary }]}
+                  href={option.href}
+                  target={option.external ? '_blank' : undefined}
+                  rel={option.external ? 'noopener' : undefined}
+                >
+                  <span class="order-sheet__option-title">{option.title}</span>
+                  {option.sub && <span class="order-sheet__option-sub">{option.sub}</span>}
+                  {option.meta && <span class="order-sheet__option-meta">{option.meta}</span>}
+                  {option.external && (
+                    <>
+                      <span class="sr-only">, opent in een nieuw tabblad</span>
+                      <svg
+                        class="order-sheet__option-meta"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M5 13 13 5M6.5 5H13v6.5" />
+                        </g>
+                      </svg>
+                    </>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </dialog>
+  )
+}
+
+<script>
+  const sheet = document.querySelector<HTMLDialogElement>('[data-order-sheet]');
+
+  if (sheet) {
+    const choices = Array.from(sheet.querySelectorAll<HTMLInputElement>('[data-order-shop-choice]'));
+    const groups = Array.from(sheet.querySelectorAll<HTMLElement>('[data-order-shop]'));
+    const fallback = sheet.dataset.defaultShop ?? '';
+
+    /** De knop die de sheet opende: daar gaat de focus naartoe als hij sluit. */
+    let trigger: HTMLElement | null = null;
+
+    /** Toont de opties van een shop; een onbekend id valt terug op de standaardshop. */
+    const showShop = (id: string) => {
+      const known = groups.some((group) => group.dataset.orderShop === id) ? id : fallback;
+      for (const group of groups) group.hidden = group.dataset.orderShop !== known;
+      for (const choice of choices) choice.checked = choice.value === known;
+    };
+
+    // Een listener voor alle bestelknoppen op de pagina, ook die in de ActionBar.
+    document.addEventListener('click', (event) => {
+      const opener =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-order-open]')
+          : null;
+      if (!opener) return;
+
+      event.preventDefault();
+      trigger = opener;
+      showShop(opener.dataset.orderOpen || fallback);
+      if (!sheet.open) sheet.showModal();
+    });
+
+    for (const choice of choices) {
+      choice.addEventListener('change', () => {
+        if (choice.checked) showShop(choice.value);
+      });
+    }
+
+    // Het paneel vult de dialog volledig: een klik die op de <dialog> zelf landt, is een
+    // klik op de backdrop.
+    sheet.addEventListener('click', (event) => {
+      if (event.target === sheet) sheet.close();
+    });
+
+    // Escape, de sluitknop en de backdrop komen allemaal hier uit.
+    sheet.addEventListener('close', () => {
+      trigger?.focus();
+      trigger = null;
+    });
+  }
+</script>

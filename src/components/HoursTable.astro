@@ -1,0 +1,87 @@
+---
+/**
+ * HoursTable.astro — de openingsuren van een shop als echte <table>.
+ *
+ * Een rij per dag, maandag eerst, met de dag als rijkop (th scope="row"). Een gesplitste
+ * dag (middag en avond) krijgt een tijdvak per regel: zo blijft de tabel smal genoeg voor
+ * een scherm van 320px. Een lege dag is "Gesloten", in woorden.
+ *
+ * Vandaag: een statische build weet niet op welke dag iemand kijkt, dus het kleine script
+ * hieronder zet bij het laden `data-today` en aria-current="date" op de juiste rij en
+ * toont het label "vandaag". De dag komt uit Europe/Brussels (lib/hours), net als de
+ * open-status, nooit uit de tijdzone van de bezoeker. Zonder JS is de tabel gewoon
+ * volledig en correct, alleen zonder markering.
+ *
+ * Nooit animeren (motion.css): wie de uren leest, moet ze meteen kunnen lezen.
+ */
+import { DAYS, DAY_LABELS_NL, formatDayRanges, type WeekHours } from '../lib/hours';
+
+interface Props {
+  hours: WeekHours;
+  /** Voor de caption: een schermlezer die tabellen overloopt, hoort van welke shop. */
+  shopName: string;
+}
+
+const { hours, shopName } = Astro.props;
+
+const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+---
+
+<table class="hours-table" data-hours-table>
+  <caption class="hours-table__caption">
+    Openingsuren<span class="sr-only"> {shopName}</span>
+  </caption>
+  <tbody>
+    {
+      DAYS.map((day) => (
+        <tr data-day={day}>
+          <th scope="row">
+            {capitalize(DAY_LABELS_NL[day])}
+            <span class="badge hours-table__today" data-today-label hidden>
+              <span class="sr-only">, </span>vandaag
+            </span>
+          </th>
+          <td>
+            {hours[day].length === 0 ? (
+              <span class="hours-table__closed">Gesloten</span>
+            ) : (
+              hours[day].map((range) => (
+                <span class="hours-table__range">{formatDayRanges([range])}</span>
+              ))
+            )}
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<script>
+  import { getBrusselsParts } from '../lib/hours';
+
+  /** Markeert vandaag in elke urentabel op de pagina. */
+  const markToday = () => {
+    let today: string;
+    try {
+      today = getBrusselsParts(new Date()).day;
+    } catch {
+      // Onbekende weekdag uit een exotische Intl-build: liever geen markering dan een foute.
+      return;
+    }
+
+    for (const row of document.querySelectorAll<HTMLTableRowElement>('[data-hours-table] tr[data-day]')) {
+      const isToday = row.dataset.day === today;
+      row.toggleAttribute('data-today', isToday);
+      if (isToday) row.setAttribute('aria-current', 'date');
+      else row.removeAttribute('aria-current');
+      row.querySelector('[data-today-label]')?.toggleAttribute('hidden', !isToday);
+    }
+  };
+
+  markToday();
+
+  // Een tab die over middernacht heen open bleef staan, klopt weer zodra je terugkomt.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') markToday();
+  });
+</script>

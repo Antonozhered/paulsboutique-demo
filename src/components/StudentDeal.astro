@@ -1,0 +1,150 @@
+---
+/**
+ * StudentDeal.astro — de studentdeal als ontworpen promokaart (#studentdeal).
+ *
+ * In de zaak staat de deal met de hand op een whiteboard naast de toog. Online krijgt hij
+ * de taal van de papieren menukaart: crème houtnerf, bladeren aan de randen, een oranje
+ * ronde sticker en echte typografie (reference/REFERENCE-studentdeal-design.png). Geen
+ * Caveat: dat handschrift hoort alleen bij "The Original".
+ *
+ * Alle feiten komen uit data/deals.ts. Zolang de voorwaarden niet bevestigd zijn, staat er
+ * "Voorwaarden volgen" (conditionsLabel): nooit het woord TODO en nooit een verzonnen
+ * periode of doelgroep. Er is bewust geen online bestelknop: de deal werkt zoals in de zaak.
+ *
+ * Toegankelijkheid: de kaart is een <section> met de H2 als naam. De sticker herhaalt de
+ * prijs als sier (aria-hidden); de volledige zin staat een keer in .sr-only.
+ *
+ * Beweging: de kaart doet een `scale`-reveal, de bladeren groeien uit hun hoek en de sticker
+ * popt 400 ms later en landt op 10 graden. Ze hangen in de kaart, dus reveal.ts laat ze
+ * samen met de kaart vertrekken; de volgorde zit in hun --delay.
+ */
+import { getImage, Image } from 'astro:assets';
+import logo from '../assets/images/logo.png';
+import woodCream from '../assets/images/textures/wood-cream.jpg';
+import { conditionsLabel, studentDeal } from '../data/deals';
+import { getShop } from '../data/shops';
+import { formatAmountCompact, telHref } from '../lib/format';
+import Leaves from './Leaves.astro';
+import SplitText from './SplitText.astro';
+import Sticker from './Sticker.astro';
+
+// Route en Bel gaan naar de eerste shop van de deal (Centrum), net als de status in de hero.
+const shop = getShop(studentDeal.shops[0]);
+
+// 'burger + friet + frisdrank' -> ['burger', 'friet', 'frisdrank']
+const includes = studentDeal.includes
+  .split('+')
+  .map((part) => part.trim())
+  .filter((part) => part.length > 0);
+
+// -> 'burger, friet en frisdrank', voor de zin die een schermlezer hoort.
+const includesSentence =
+  includes.length > 1
+    ? `${includes.slice(0, -1).join(', ')} en ${includes[includes.length - 1]}`
+    : includes.join('');
+
+const amount = formatAmountCompact(studentDeal.price);
+const srText = `${studentDeal.title}: ${includesSentence} voor ${amount} euro`;
+
+// Zacht afbreekstreepje: op desktop breekt de kop als "Student-" / "deal" (spec); op een
+// smal scherm alleen als het woord echt niet past.
+const title = studentDeal.title.replace(/deal$/i, '­deal');
+
+// Houtnerf als achtergrond: avif en webp via image-set, met de originele jpg als vangnet
+// voor browsers zonder image-set(type()). Het crème van --c-wood ligt er altijd onder.
+const [woodAvif, woodWebp] = await Promise.all([
+  getImage({ src: woodCream, format: 'avif' }),
+  getImage({ src: woodCream, format: 'webp' }),
+]);
+const woodStyle = [
+  `background-image:url(${woodCream.src})`,
+  `background-image:image-set(url(${woodAvif.src}) type("image/avif"), url(${woodWebp.src}) type("image/webp"))`,
+].join(';');
+
+const LOGO_HEIGHT = 64;
+const logoWidth = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
+---
+
+<div id="studentdeal" class="section section--bottle deal">
+  <div class="container">
+    <div class="deal__inner">
+      <p class="eyebrow">Voor studenten</p>
+
+      <section
+        class="card deal-card"
+        aria-labelledby="studentdeal-title"
+        data-surface="paper"
+        data-reveal="scale"
+        style={woodStyle}
+      >
+        <Leaves name="monstera-palm" at="tr" rotate={6} />
+        <Leaves name="banana-outline" at="bl" rotate={-6} />
+
+        <div class="deal-card__intro">
+          {/* alt="": het merk staat al in de kop van de pagina; hier is het logo drukwerk. */}
+          <Image
+            class="deal-card__logo"
+            src={logo}
+            alt=""
+            width={logoWidth}
+            height={LOGO_HEIGHT}
+            densities={[1.5, 2]}
+          />
+
+          <SplitText
+            as="h2"
+            id="studentdeal-title"
+            text={title}
+            class="deal-card__title"
+            delay={100}
+          />
+
+          {/* De bolletjes ertussen zijn oranje blaadjes, getekend in global.css. */}
+          <ul class="deal-card__includes" role="list">
+            {includes.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+
+        {/* Na de kop in de leesvolgorde, zodat de prijszin na "Studentdeal" komt. */}
+        <div class="deal-card__sticker">
+          <Sticker price={`€${amount}`} label="Alles samen" srText={srText} delay={400} />
+        </div>
+
+        <div class="deal-card__choose">
+          <h3 class="deal-card__label">Kies je burger</h3>
+
+          <ul class="deal-card__choices" role="list">
+            {
+              studentDeal.choices.map((choice) => (
+                <li class="deal-chip">
+                  {choice.short}
+                  {choice.veggie && (
+                    <>
+                      <Fragment set:html="&#32;" />
+                      <span class="badge badge--veggie">Veggie</span>
+                    </>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
+
+          <p class="deal-card__conditions">{conditionsLabel}</p>
+
+          {
+            shop && (
+              <div class="deal-card__actions">
+                <a class="btn btn--primary" href={shop.mapsUrl} target="_blank" rel="noopener">
+                  Route naar Paul's
+                </a>
+                <a class="btn btn--ghost" href={telHref(shop.phone)}>
+                  Bel<span class="sr-only"> {shop.name}</span>
+                </a>
+              </div>
+            )
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

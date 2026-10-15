@@ -106,6 +106,13 @@ body {
   }
 }
 
+/* Mosterd op crème of hout haalt maar ~1,9:1, te weinig voor een focusring (WCAG 1.4.11
+   vraagt 3:1). Op lichte vlakken wordt de ring jungle; elders blijft hij mosterd. */
+.section--cream :focus-visible,
+[data-surface='paper'] :focus-visible {
+  outline-color: var(--c-jungle);
+}
+
 .skip-link {
   position: absolute;
   inset-block-start: var(--space-xs);
@@ -165,6 +172,7 @@ h6 {
 
 p {
   max-width: var(--measure);
+  text-wrap: pretty; /* geen eenzaam woord op de laatste regel, waar de browser het kan */
 }
 
 a {
@@ -210,6 +218,35 @@ b {
 .small-print {
   font-size: var(--step--1);
   opacity: 0.85;
+}
+
+/* Losse tekstlink (nummer, route, reviews): onderstreept zoals een link hoort, en een
+   volwaardig tap target van 48px hoog zonder dat hij als knop oogt. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+/* Midden in een zin: een eigen hoogte van 48px duwt de regels uit elkaar. Inline padding
+   vergroot het tap target zonder de regelhoogte te veranderen. */
+.link--inline {
+  display: inline;
+  min-height: 0;
+  padding-block: 0.9em;
+}
+
+/* Elke sectie opent hetzelfde: de H2 en soms een korte intro eronder. */
+.section-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-s);
+  margin-block-end: var(--space-l);
 }
 
 /* === LAYOUT ============================================================= */
@@ -450,6 +487,9 @@ button.pill {
 .leaf {
   position: absolute;
   z-index: var(--z-leaf);
+  /* De breedte komt van Leaves.astro als custom property, niet als inline width:
+     zo kan een mediaquery een blad per breakpoint kleiner maken. */
+  width: var(--leaf-width, 260px);
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
@@ -508,7 +548,7 @@ button.pill {
   content: '';
   position: absolute;
   inset: 7%;
-  border: 1.5px dashed rgb(27 27 24 / 0.4);
+  border: 1.5px dashed rgb(20 34 26 / 0.4); /* jungle 40% */
   border-radius: 50%;
   pointer-events: none;
 }
@@ -525,7 +565,7 @@ button.pill {
   display: block;
   font-family: var(--font-label);
   font-weight: 600;
-  font-size: 0.6rem;
+  font-size: var(--sticker-label-size, 0.6rem);
   line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -560,10 +600,13 @@ button.pill {
 
 /* De lijst binnen een categorie. Max twee kolommen vanaf 900px; de chips
    filteren hem via data-filtering (de fade staat in motion.css). */
+/* Geen rijafstand: elke regel heeft zijn eigen padding en stippellijn, zoals op de
+   papieren kaart. Een gap erbovenop zette de lijnen scheef tussen de regels en maakte de
+   beefburgers alleen al ~1900px lang op een telefoon. */
 .menu-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-m);
+  row-gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -656,7 +699,10 @@ button.pill {
   vertical-align: baseline;
 }
 
+/* De transparante rand houdt elke dagnaam op dezelfde lijn als die van vandaag, die een
+   mosterd rand van 3px krijgt. */
 .hours-table th {
+  border-inline-start: 3px solid transparent;
   font-family: var(--font-label);
   font-weight: 600;
   text-transform: uppercase;
@@ -681,6 +727,31 @@ button.pill {
 .section--cream .hours-table th,
 .section--cream .hours-table td {
   border-block-end-color: rgb(27 27 24 / 0.14);
+}
+
+.hours-table__caption {
+  padding-block-end: 0.4rem;
+  color: var(--c-sage);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--step--1);
+  text-align: start;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+
+/* Een tijdvak per regel: zo blijft een gesplitste dag smal genoeg voor 320px. */
+.hours-table__range {
+  display: block;
+}
+
+/* "vandaag" onder de dagnaam, niet ernaast: naast "Donderdag" past het niet op 320px. */
+.hours-table__today {
+  display: block;
+  inline-size: fit-content;
+  margin-block-start: 0.25rem;
+  background-color: var(--c-mustard);
+  color: var(--c-jungle);
 }
 
 /* === OPEN STATUS ======================================================== */
@@ -721,6 +792,17 @@ button.pill {
 
 /* === HEADER & NAV ======================================================= */
 
+/* Buiten de flow, vastgepind op de bovenrand van het document. Het baken is puur een
+   meetpunt voor de header: het neemt geen ruimte in en is niet zichtbaar. */
+.header-sentinel {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 1px;
+  block-size: 1px;
+  pointer-events: none;
+}
+
 .site-header {
   position: sticky;
   inset-block-start: 0;
@@ -748,6 +830,16 @@ button.pill {
   background-color: var(--c-jungle-90);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+}
+
+/* Het logo is 40px hoog en 34px breed; de link eromheen wordt op beide assen een
+   volwaardig tap target van 48px. */
+.site-logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  flex: 0 0 auto;
 }
 
 .site-nav {
@@ -823,6 +915,13 @@ button.pill {
   color: var(--c-peach);
 }
 
+/* Het blad in het overlay hangt in de vrije hoek onder de links. Met de standaard
+   insets bleef er maar een snipper van over; zo leest het als een blad. */
+.nav-overlay > .leaf {
+  --leaf-inset-block: 0;
+  --leaf-inset-inline: -10%;
+}
+
 .nav-overlay__close {
   position: absolute;
   inset-block-start: var(--space-s);
@@ -830,11 +929,774 @@ button.pill {
   z-index: var(--z-content);
 }
 
+/* === HERO =============================================================== */
+
+/* Minder ruimte bovenaan dan een gewone sectie: de sticky header ligt er doorzichtig
+   overheen, dus zonder deze correctie zou de kop te laag beginnen. */
+.hero {
+  padding-block-start: calc(var(--header-h) + var(--space-l));
+}
+
+/* De hero bepaalt de maat van zijn eigen bladeren, want die hangt af van de ruimte
+   naast de tekstkolom en niet van de component. */
+.hero > .leaf--tr {
+  --leaf-width: 300px;
+}
+
+.hero > .leaf--bl {
+  --leaf-width: 280px;
+}
+
+/* Tussen 640 en 1024 staat de hero nog in een kolom: de tekst en de pillen lopen dan
+   door tot de rechterrand, waar het blad rechtsboven hangt. Onder 640px knijpt
+   `.leaf { max-width: 44% }` het blad al genoeg; daartussen moet het met de hand. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero > .leaf--tr {
+    --leaf-width: 210px;
+    /* In px, niet in %: een procent rekent tegen de hoogte van de hero, en die is in
+       een kolom bijna 1000px. -6% zou het blad 60px omhoog duwen, buiten de clip van
+       de sectie — en dan ziet de IntersectionObserver het verkleinde blad nooit. */
+    --leaf-inset-block: -24px;
+  }
+}
+
+.hero__grid {
+  display: grid;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+/* Vanaf 1024px twee kolommen: tekst links, foto rechts. */
+@media (min-width: 1024px) {
+  .hero__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl);
+  }
+
+  /* Zodra de tekst in de linkerkolom staat, hangt het blad linksonder precies over de
+     knoppen. Extra ruimte onder de hero geeft het een eigen band; daar is het sier en
+     ligt het nooit achter tekst of een knop. */
+  .hero {
+    padding-block-end: calc(var(--space-2xl) * 2);
+  }
+
+  /* Het blad hoort in de band onder de knoppen, niet erachter: kleiner, en maar licht
+     weggesneden. Dieper wegsnijden kan niet: de `grow`-reveal start op scale(.4) rond
+     de onderhoek, en als dat verkleinde blad volledig buiten de clip van de sectie
+     valt, ziet de IntersectionObserver het nooit en onthult het zich nooit. */
+  .hero > .leaf--bl {
+    --leaf-width: 200px;
+    --leaf-inset-block: -44px;
+    --leaf-inset-inline: -3%;
+  }
+}
+
+.hero__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-m);
+}
+
+.hero__status {
+  --cluster-gap: var(--space-xs);
+}
+
+/* De statuspil is niet klikbaar en zou dus op ~36px uitkomen, naast een dealpil van
+   48px. Even hoog maken is puur visueel; het verandert niets aan de tap targets. */
+.hero__status .pill {
+  min-height: var(--tap);
+}
+
+/* De dealpil is de enige pil die een accent draagt: hij moet opvallen tussen de
+   statuspil, zonder oranje te worden (oranje is voor acties). */
+.hero__deal-pill {
+  border-color: var(--c-mustard);
+  color: var(--c-mustard);
+  font-family: var(--font-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Een kop mag breder breken dan de leesmaat van een paragraaf. */
+.hero__title {
+  max-width: 16ch;
+}
+
+/* De foto en de sticker delen een positioneringscontext: zo kan de sticker over de
+   hoek van de foto hangen zonder de layout te verschuiven. */
+.hero__media {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+.hero__photo {
+  --frame-ratio: 4 / 3;
+}
+
+/* Vanaf tabletbreedte wordt 4/3 een muur van 550px hoog: daar mag de foto platter,
+   wat ook dichter bij de natuurlijke verhouding van de opname ligt. */
+@media (min-width: 640px) {
+  .hero__photo {
+    --frame-ratio: 3 / 2;
+  }
+}
+
+/* Rechtsboven, deels over de foto. De schuine stand zit in de sticker zelf. */
+/* De sticker staat 12 graden schuin, dus zijn bounding box is ~10px breder dan de
+   cirkel zelf. Hij hangt daarom met zijn rechterrand BINNEN de foto: zo valt hij over
+   de hoek zonder voorbij de gutter van 16px te steken en door de sectie afgesneden te
+   worden. Verticaal mag hij wel buiten de foto: daar is ruimte. */
+.hero__sticker {
+  position: absolute;
+  inset-block-start: -18px;
+  inset-inline-end: 6px;
+  z-index: calc(var(--z-content) + 1);
+}
+
+@media (min-width: 640px) {
+  .hero__sticker {
+    inset-block-start: -26px;
+    inset-inline-end: 10px;
+  }
+}
+
+/* === STUDENTDEAL ======================================================== */
+
+/* De kaart en zijn eyebrow delen een smallere kolom: over de volle containerbreedte leest
+   een promokaart als een banner, niet meer als een gedrukte kaart. */
+.deal__inner {
+  max-width: 60rem;
+  margin-inline: auto;
+}
+
+/* De houtnerf komt inline uit StudentDeal.astro (image-set met avif en webp), met crème
+   eronder zolang hij laadt. Hij staat op zijn natuurlijke contrast: nooit verdonkeren,
+   jungle haalt er ruim 12:1 op. */
+.deal-card {
+  display: grid;
+  gap: var(--space-m);
+  padding: 38px 20px var(--space-m);
+  background-color: var(--c-wood);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--c-jungle);
+}
+
+/* Gedrukte binnenrand, 8px van de snijrand zoals op de papieren menukaart. Zelfde laag als
+   de bladeren maar eerder in de DOM, dus eronder: de bladeren liggen erover. */
+.deal-card::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  z-index: var(--z-leaf);
+  border: 1.5px solid var(--c-jungle-20);
+  border-radius: calc(var(--radius-l) - 8px);
+  pointer-events: none;
+}
+
+/* Bladeren in de kaart, afgesneden door zijn randen. Mobiel zo klein dat ze nooit tegen
+   de titel, de keuzepillen of de kleine lettertjes aankomen: de monstera blijft boven de
+   titel achter de sticker, de bananenbladeren onder de voorwaarden, achter de knoppen. */
+.deal-card > .leaf--tr {
+  --leaf-width: 150px;
+  --leaf-inset-block: -14px;
+  --leaf-inset-inline: -18px;
+}
+
+.deal-card > .leaf--bl {
+  --leaf-width: 96px;
+  --leaf-inset-block: -24px;
+  --leaf-inset-inline: -16px;
+}
+
+/* Mobiel rechtsboven in de kaart, deels over de monstera. Het logo staat links op
+   dezelfde hoogte en de titel begint pas eronder, dus de sticker raakt hem niet. */
+.deal-card__sticker {
+  --sticker-size: 98px;
+  --sticker-price-size: 2.05rem;
+  --sticker-label-size: 0.58rem;
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 14px;
+  z-index: calc(var(--z-content) + 1);
+}
+
+.deal-card__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-s);
+}
+
+.deal-card__logo {
+  width: auto;
+  height: 64px;
+}
+
+/* "Studentdeal" is 6,33em breed in Alfa Slab One; de kaart laat mobiel 100vw - 72px over
+   (2 x 16px gutter + 2 x 20px padding). Zo staat het woord op een regel en zo groot als
+   past, tot 50px (390px breed). Onder ~330px wint de ondergrens van 40px en breekt het
+   netjes op het zachte afbreekstreepje: "Student-" / "deal". */
+.deal-card__title {
+  margin-block-start: var(--space-xs);
+  font-size: clamp(2.5rem, (100vw - 72px) / 6.4, 3.125rem);
+  hyphens: manual;
+}
+
+/* De regel is 14,66em breed. Mobiel krimpt hij mee met de kaart in plaats van te breken:
+   een blaadje vooraan een tweede regel ("• FRISDRANK") oogt als een fout. */
+.deal-card__includes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: min(var(--step-1), (100vw - 72px) / 15);
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* De bolletjes tussen BURGER • FRIET • FRISDRANK zijn kleine oranje blaadjes: een vierkant
+   met twee afgeronde hoeken, een kwartslag gedraaid zodat de punten boven en onder staan. */
+.deal-card__includes li + li::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.38em;
+  block-size: 0.38em;
+  margin-inline: 0.5em 0.6em;
+  border-radius: 0 100%;
+  background-color: var(--c-orange);
+  rotate: 45deg;
+  vertical-align: 0.14em;
+}
+
+/* "Kies je burger": een kop in Oswald met een volle lijn eronder. */
+.deal-card__label {
+  padding-block-end: 0.45rem;
+  border-block-end: 2px solid var(--c-jungle);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--step-0);
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.deal-card__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: var(--space-s);
+}
+
+/* Geen knoppen: je kiest aan de toog. Daarom ook geen tap target van 48px. */
+.deal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.85rem;
+  border: 1.5px solid var(--c-jungle);
+  border-radius: var(--radius-pill);
+  background-color: rgb(251 232 205 / 0.8); /* cream 80% */
+  font-family: var(--font-menu);
+  font-weight: 700;
+  font-size: var(--step--1);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 14px: kleine lettertjes, de enige bewuste uitzondering op 16px lopende tekst. */
+.deal-card__conditions {
+  margin-block-start: var(--space-s);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* Even breed waar het past; nooit smaller dan hun tekst, dus op 320px stapelen ze. */
+.deal-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block-start: var(--space-m);
+}
+
+.deal-card__actions .btn {
+  flex: 1 1 0;
+  min-width: max-content;
+  padding-inline: 1.1rem;
+}
+
+/* Vanaf 900px twee kolommen: titel links, kiezen en knoppen rechts. */
+@media (min-width: 900px) {
+  .deal-card {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'intro sticker'
+      'intro choose';
+    column-gap: var(--space-xl);
+    row-gap: var(--space-s);
+    padding: 48px;
+  }
+
+  .deal-card__intro {
+    grid-area: intro;
+  }
+
+  /* In de vrije ruimte rechts van het logo, in een eigen cel van de rechterkolom: zo kan
+     hij de titel (linkerkolom) nooit raken, hoe breed die ook uitvalt. */
+  .deal-card__sticker {
+    --sticker-size: 150px;
+    --sticker-price-size: 3.15rem;
+    --sticker-label-size: 0.78rem;
+    grid-area: sticker;
+    position: relative;
+    inset: auto;
+    justify-self: start;
+    margin-block-start: -12px;
+  }
+
+  .deal-card__choose {
+    grid-area: choose;
+    align-self: end;
+  }
+
+  /* ~76px (rem is hier 17-18px: html volgt --step-0) en altijd op twee regels: min-content
+     breekt de kop op elke breekkans, en de enige die er is, is het zachte afbreekstreepje. */
+  .deal-card__title {
+    font-size: 4.25rem;
+    inline-size: min-content;
+  }
+
+  .deal-card > .leaf--tr {
+    --leaf-width: 290px;
+    --leaf-inset-block: -22px;
+    --leaf-inset-inline: -26px;
+  }
+
+  .deal-card > .leaf--bl {
+    --leaf-width: 160px;
+    --leaf-inset-block: -34px;
+    --leaf-inset-inline: -22px;
+  }
+}
+
+/* === MENU (sectie) ====================================================== */
+
+.menu .menu__updated {
+  color: var(--c-olive);
+}
+
+/* Mobiel loopt de chiprij van rand tot rand en scrollt hij horizontaal; de padding houdt de
+   eerste chip op de gutter en laat boven en onder plaats voor de focusring. */
+.menu__filters {
+  margin-inline: calc(var(--gutter) * -1);
+  margin-block-end: var(--space-l);
+  padding: 0.4rem var(--gutter);
+}
+
+@media (min-width: 640px) {
+  .menu__filters {
+    flex-wrap: wrap;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+}
+
+/* Zonder JS filtert niets: dan geen chips, wel alle categorieen. */
+html:not(.js) .menu__filters {
+  display: none;
+}
+
+.menu__results {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+/* Oswald in olijf met een lijn eronder, zoals de rubrieken op de papieren kaart. */
+.menu .menu-category__title {
+  margin-block-end: var(--space-xs);
+  padding-block-end: 0.5rem;
+  border-block-end: 2px solid currentColor;
+  color: var(--c-olive);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--step-1);
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Upgradebox onder de beefburgers: een donker kaartje op het papier, zoals in de tile. */
+.menu-upgrade {
+  margin-block-start: var(--space-m);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background-color: var(--c-jungle);
+  color: var(--c-cream);
+}
+
+.menu-upgrade__title {
+  margin-block-end: 0.4rem;
+  color: var(--c-mustard);
+}
+
+.menu .menu-upgrade__list li {
+  color: var(--c-cream);
+}
+
+.menu__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-s);
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-l);
+  border-block-start: 1px dashed rgb(27 27 24 / 0.25);
+}
+
+.menu__allergy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+/* === SFEER ============================================================== */
+
+/* Mobiel een rij van rand tot rand die horizontaal scrollt en snapt; de volgende foto piept
+   al binnen. Boven en onder ruimte, zodat de schuine hoeken en de reveal (32px omhoog) niet
+   tegen de rand van de scrollcontainer afgeknipt worden. */
+.atmosphere__scroller {
+  margin-inline: calc(var(--gutter) * -1);
+  padding: var(--space-s) var(--gutter) var(--space-l);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.atmosphere__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* Van rand tot rand: een ring buiten de rand zou door de sectie afgesneden worden. */
+.atmosphere__scroller:focus-visible {
+  outline-offset: calc(var(--focus-offset) * -1);
+}
+
+.atmosphere__strip {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.atmosphere__item {
+  flex: 0 0 min(72%, 20rem);
+  scroll-snap-align: start;
+  rotate: var(--rest-rotate, 0deg);
+}
+
+.atmosphere__photo {
+  --frame-ratio: 3 / 4;
+}
+
+.atmosphere__cta {
+  margin-block-start: var(--space-m);
+}
+
+@media (min-width: 900px) {
+  .atmosphere__scroller {
+    margin-inline: 0;
+    padding: var(--space-s) 0 var(--space-m);
+    overflow: visible;
+  }
+
+  .atmosphere__strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-m);
+  }
+}
+
+/* === SHOPS ============================================================== */
+
+.shops__grid {
+  display: grid;
+  gap: var(--space-m);
+}
+
+/* Naast elkaar even hoog (stretch), met de knoppen onderaan: zo staan Bel, Route en
+   Bestel van beide shops op een lijn, ook als de ene shop meer gesplitste dagen heeft. */
+@media (min-width: 900px) {
+  .shops__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--c-jungle);
+}
+
+/* De foto loopt tot de rand; de kaart rondt hem bovenaan af. */
+.shop-card__media {
+  --frame-ratio: 3 / 2;
+  border-radius: 0;
+}
+
+/* Het uithangbord hangt in de bovenste helft van de staande foto. */
+.shop-card__media img {
+  object-position: 50% 28%;
+}
+
+/* Geen foto: op dezelfde plek en in dezelfde verhouding een blad op jungle, zodat twee
+   kaarten naast elkaar even hoog zijn en hun urentabellen uitlijnen. */
+.shop-card__media--leaf {
+  aspect-ratio: 3 / 2;
+  overflow: clip;
+}
+
+.shop-card__media--leaf > .leaf {
+  --leaf-width: 92%;
+  --leaf-inset-block: -14%;
+  --leaf-inset-inline: -6%;
+  max-width: none;
+}
+
+.shop-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-s);
+  padding: var(--space-m) 20px;
+}
+
+.shop-card__title {
+  font-size: var(--step-2);
+}
+
+.shop-card__address {
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.shop-card .hours-table {
+  margin-block: var(--space-xs);
+}
+
+/* Smallere cellen: "Donderdag" plus een tijdvak moet op 320px nog naast elkaar passen. */
+.shop-card .hours-table th,
+.shop-card .hours-table td {
+  padding-inline: 0.4rem;
+}
+
+.shop-card__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  margin-block-start: auto;
+  padding-block-start: var(--space-xs);
+}
+
+.shop-card__actions .btn {
+  padding-inline: 0.5rem;
+}
+
+/* === ANDERE SHOPS ======================================================= */
+
+.other-shops {
+  margin-block-start: var(--space-2xl);
+}
+
+.other-shops__title {
+  margin-block-end: var(--space-m);
+  font-size: var(--step-2);
+}
+
+.other-shops__list {
+  display: grid;
+  gap: var(--space-m) var(--space-l);
+}
+
+@media (min-width: 640px) {
+  .other-shops__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .other-shops__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.other-shop {
+  padding-block-start: var(--space-s);
+  border-block-start: 1px solid rgb(251 232 205 / 0.18);
+}
+
+.other-shop__name {
+  font-family: var(--font-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+
+.other-shop__links {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-m);
+}
+
+/* === EVENTS ============================================================= */
+
+/* Rechtsboven, in de bovenmarge van de sectie en naast de tekstkolom: nooit achter een zin. */
+.events > .leaf--tr {
+  --leaf-width: 360px;
+  --leaf-inset-block: -36px;
+  --leaf-inset-inline: -40px;
+}
+
+.events__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-m);
+  max-width: 40rem;
+}
+
+.events__taco {
+  font-size: var(--step--1);
+}
+
+/* "ON THE MOVE": grote, alleen omlijnde Oswald onder de inhoud, door de onderrand van de
+   sectie afgesneden. Pure decoratie (aria-hidden), tot er een foto van de foodtruck is. */
+.events__deco {
+  margin-block: var(--space-xl) calc(var(--space-2xl) * -1 - 0.1em);
+  color: transparent;
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: clamp(5rem, 1rem + 17vw, 14rem);
+  line-height: 0.82;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.5px rgb(162 168 104 / 0.5);
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* === FOOTER ============================================================= */
+
+.site-footer {
+  padding-block: var(--space-xl) var(--space-l);
+  border-block-start: 1px solid var(--c-sage);
+  background-color: var(--c-jungle);
+}
+
+.site-footer__grid {
+  display: grid;
+  gap: var(--space-l);
+}
+
+@media (min-width: 900px) {
+  .site-footer__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    column-gap: var(--space-xl);
+  }
+}
+
+.site-footer__brand {
+  display: flex;
+  align-items: center;
+  align-self: start;
+  gap: var(--space-s);
+}
+
+.site-footer__name {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.1;
+}
+
+.site-footer__tagline,
+.site-footer__title {
+  color: var(--c-sage);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--step--1);
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+
+.site-footer__tagline {
+  margin-block-start: 0.35rem;
+}
+
+.site-footer__title {
+  margin-block-end: var(--space-s);
+}
+
+.site-footer__shops {
+  display: grid;
+  gap: var(--space-m);
+  margin-block-end: var(--space-s);
+}
+
+@media (min-width: 640px) {
+  .site-footer__shops {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.site-footer__shop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-style: normal;
+}
+
+.site-footer__shop-name {
+  font-weight: 700;
+}
+
+/* Een lang mailadres breekt liever dan de pagina op 320px breder te maken. */
+.site-footer__email {
+  overflow-wrap: anywhere;
+}
+
+.site-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-block-start: var(--space-l);
+  padding-block-start: var(--space-m);
+  border-block-start: 1px solid rgb(251 232 205 / 0.12);
+  font-size: var(--step--1);
+}
+
 /* === ORDER SHEET (native dialog) ======================================== */
 
+/* margin: auto staat er expliciet: de reset (* { margin: 0 }) wint van de browserstijl
+   die een modale dialog centreert, en dan plakt hij linksboven. */
 .order-sheet {
   width: calc(100% - (var(--gutter) * 2));
   max-width: 32rem;
+  margin: auto;
   padding: 0;
   border: 0;
   border-radius: var(--radius-l);
@@ -847,35 +1709,136 @@ button.pill {
   background-color: rgb(20 34 26 / 0.7);
 }
 
-.order-sheet__body {
+/* De pagina eronder scrollt niet mee zolang de sheet open staat. */
+html:has(.order-sheet[open]) {
+  overflow: hidden;
+}
+
+/* Zonder JS kan geen enkele bestelknop de sheet openen: liever geen knop dan een dode.
+   Bellen en de route zijn gewone links en blijven werken. */
+html:not(.js) [data-order-open] {
+  display: none;
+}
+
+/* Het paneel vult de hele dialog: een klik op de dialog zelf is dus een klik op de backdrop. */
+.order-sheet__panel {
   display: grid;
-  gap: var(--space-xs);
+  gap: var(--space-m);
   padding: var(--space-m);
 }
 
-.order-sheet__option {
+.order-sheet__head {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-s);
+}
+
+.order-sheet__title {
+  padding-block-start: 0.35rem;
+  font-size: var(--step-2);
+}
+
+.order-sheet__close {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
   justify-content: center;
-  gap: 0.15rem;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  border: 1.5px solid rgb(251 232 205 / 0.3);
+  border-radius: 50%;
+  color: var(--c-cream);
+  cursor: pointer;
+}
+
+/* Shopkeuze: twee pillen in een rail. Native radioknoppen (visueel verborgen); de label is
+   de pil en dus het tap target. */
+.order-sheet__shops {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 0.25rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid rgb(251 232 205 / 0.18);
+  border-radius: var(--radius-pill);
+}
+
+.order-sheet__shop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding-inline: var(--space-s);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.order-sheet__shop:has(:checked) {
+  background-color: var(--c-cream);
+  color: var(--c-jungle);
+}
+
+.order-sheet__shop:has(:focus-visible) {
+  outline: var(--focus-ring) solid var(--c-mustard);
+  outline-offset: 2px;
+}
+
+.order-sheet__options {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+/* Titel en uitleg links, het nummer of het pijltje naar buiten rechts. */
+.order-sheet__option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title meta'
+    'sub meta';
+  align-content: center;
+  align-items: center;
+  column-gap: var(--space-s);
+  row-gap: 0.1rem;
   min-height: 64px;
   padding: 0.75rem 1rem;
   border: 1px solid rgb(251 232 205 / 0.18);
   border-radius: var(--radius-m);
   background-color: rgb(255 255 255 / 0.04);
   color: var(--c-cream);
-  text-align: left;
   text-decoration: none;
   cursor: pointer;
 }
 
-.order-sheet__option > span:first-child {
-  font-weight: 600;
+/* Bellen is de aanbevolen weg: snelst voor de klant, geen platformcommissie voor de zaak. */
+.order-sheet__option--primary {
+  border-color: var(--c-orange);
+  background-color: var(--c-orange);
+  color: var(--c-jungle);
 }
 
-.order-sheet__option > span:last-child {
+.order-sheet__option-title {
+  grid-area: title;
+  font-weight: 700;
+  font-size: var(--step-1);
+  line-height: 1.25;
+}
+
+/* Geen opacity: op oranje zou de uitleg dan onder AA zakken. */
+.order-sheet__option-sub {
+  grid-area: sub;
   font-size: var(--step--1);
-  opacity: 0.8;
+  line-height: 1.35;
+}
+
+.order-sheet__option-meta {
+  grid-area: meta;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 @media (max-width: 639px) {
@@ -889,7 +1852,7 @@ button.pill {
     border-end-end-radius: 0;
   }
 
-  .order-sheet__body {
+  .order-sheet__panel {
     padding-block-end: calc(var(--space-m) + env(safe-area-inset-bottom));
   }
 }
@@ -933,8 +1896,14 @@ button.pill {
   color: var(--c-jungle);
 }
 
+.actionbar__item svg {
+  flex: none;
+}
+
+/* Alleen op pagina's met de balk (BaseLayout zet de klasse): de laatste regel van de
+   footer mag er nooit onder verdwijnen. */
 @media (max-width: 767px) {
-  body {
+  body.has-actionbar {
     padding-block-end: calc(56px + env(safe-area-inset-bottom));
   }
 }

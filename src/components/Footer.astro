@@ -1,0 +1,75 @@
+---
+/**
+ * Footer.astro — contact (#contact): beide Kortrijkse shops, de reviews en de kleine lettertjes.
+ *
+ * Staat buiten <main> (BaseLayout), zodat het de contentinfo-landmark van de pagina is.
+ * Per shop het adres en een klikbaar nummer; het mailadres alleen waar er een is. Naam,
+ * adres en nummer staan hier letterlijk zoals in de shopkaarten en straks in de JSON-LD:
+ * Google vertrouwt gegevens die overal hetzelfde zijn.
+ *
+ * Het jaartal is dat van de build. Voor een statische site is dat precies juist: het
+ * zegt wanneer deze versie gemaakt is.
+ */
+import { Image } from 'astro:assets';
+import logo from '../assets/images/logo.png';
+import { brand } from '../data/brand';
+import { primaryShops } from '../data/shops';
+import { mailtoHref, telHref } from '../lib/format';
+import ConceptBadge from './ConceptBadge.astro';
+
+const year = new Date().getFullYear();
+
+const LOGO_HEIGHT = 64;
+const logoWidth = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
+---
+
+<footer id="contact" class="site-footer">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        {/* alt="": de naam staat er als tekst naast. */}
+        <Image src={logo} alt="" width={logoWidth} height={LOGO_HEIGHT} densities={[1.5, 2]} />
+        <div>
+          <p class="site-footer__name">{brand.name}</p>
+          <p class="site-footer__tagline">{brand.tagline}</p>
+        </div>
+      </div>
+
+      <div class="site-footer__contact">
+        <h2 class="site-footer__title">Contact</h2>
+
+        <div class="site-footer__shops">
+          {
+            primaryShops.map((shop) => (
+              <address class="site-footer__shop">
+                <p class="site-footer__shop-name">{shop.name}</p>
+                <p>
+                  {shop.street}
+                  <br />
+                  {shop.postal}&nbsp;{shop.city}
+                </p>
+                <a class="link tabular" href={telHref(shop.phone)}>
+                  {shop.phoneDisplay}
+                </a>
+                {shop.email && (
+                  <a class="link site-footer__email" href={mailtoHref(shop.email)}>
+                    {shop.email}
+                  </a>
+                )}
+              </address>
+            ))
+          }
+        </div>
+
+        <a class="link" href={brand.googleReviewsUrl} target="_blank" rel="noopener">
+          Lees de reviews op Google
+        </a>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>© {year} {brand.name}</p>
+      <ConceptBadge />
+    </div>
+  </div>
+</footer>

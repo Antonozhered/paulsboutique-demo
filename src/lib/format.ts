@@ -16,6 +16,11 @@ const amountFormatter = new Intl.NumberFormat('nl-BE', {
   maximumFractionDigits: 2,
 });
 
+/** Dezelfde notatie zonder decimalen, voor hele bedragen ("€ 15" in plaats van "€ 15,00"). */
+const wholeAmountFormatter = new Intl.NumberFormat('nl-BE', {
+  maximumFractionDigits: 0,
+});
+
 /** Staat er voor een bedrag dat niet klopt. Nooit een verzonnen prijs tonen. */
 const NO_AMOUNT = '—';
 
@@ -33,6 +38,24 @@ export function formatPrice(value: number): string {
 export function formatAmount(value: number): string {
   if (!Number.isFinite(value)) return NO_AMOUNT;
   return amountFormatter.format(value);
+}
+
+/**
+ * Bedrag zonder overbodige nullen: hele euro's zonder decimalen, de rest zoals formatAmount.
+ * Voor de studentdeal en zijn sticker. Op de menukaart blijft formatPrice de norm: daar
+ * lijnen de prijzen op de komma uit.
+ * @example formatAmountCompact(15) // '15'
+ * @example formatAmountCompact(15.5) // '15,50'
+ */
+export function formatAmountCompact(value: number): string {
+  if (!Number.isFinite(value)) return NO_AMOUNT;
+  return Number.isInteger(value) ? wholeAmountFormatter.format(value) : formatAmount(value);
+}
+
+/** Prijs met euroteken, zonder overbodige nullen. @example formatPriceCompact(15) // '€ 15' */
+export function formatPriceCompact(value: number): string {
+  if (!Number.isFinite(value)) return NO_AMOUNT;
+  return `${EURO_PREFIX}${formatAmountCompact(value)}`;
 }
 
 /**

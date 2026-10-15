@@ -1,0 +1,86 @@
+---
+/**
+ * Leaves.astro — zet EEN bladillustratie als decoratie in een hoek van een sectie.
+ *
+ * De vier SVG's in src/assets/svg/ zijn eigen werk met de juiste kleuren: niet
+ * hertekenen, niet herkleuren. Ze worden als <img> geladen, nooit inline: elk bestand
+ * is ~45 KB en zou de HTML opblazen.
+ *
+ * Het blad is puur sier: alt="", aria-hidden en pointer-events: none (global.css).
+ * De sectie eromheen heeft `overflow: clip` (.section), waardoor een blad dat buiten
+ * de rand valt netjes afgesneden wordt in plaats van de pagina breder te maken.
+ */
+import monsteraPalm from '../assets/svg/leaves-monstera-palm.svg';
+import palmMonstera from '../assets/svg/leaves-palm-monstera.svg';
+import philodendron from '../assets/svg/leaves-philodendron.svg';
+import bananaOutline from '../assets/svg/leaves-banana-outline.svg';
+
+export type LeafName =
+  | 'monstera-palm'
+  | 'palm-monstera'
+  | 'philodendron'
+  | 'banana-outline';
+
+/** Hoek waar het blad hangt; bepaalt ook de transform-origin van de `grow`-reveal. */
+export type LeafCorner = 'tl' | 'tr' | 'bl' | 'br';
+
+const LEAVES: Record<LeafName, ImageMetadata> = {
+  'monstera-palm': monsteraPalm,
+  'palm-monstera': palmMonstera,
+  philodendron: philodendron,
+  'banana-outline': bananaOutline,
+};
+
+interface Props {
+  name: LeafName;
+  at: LeafCorner;
+  /**
+   * Vaste breedte in px. Laat weg wanneer de sectie de maat per breakpoint bepaalt:
+   * een inline waarde wint het altijd van een mediaquery.
+   */
+  width?: number;
+  /** Rotatie in rust. Komt in `--rest-rotate`, zodat de reveal erop landt. */
+  rotate?: number;
+  /** Verschuiving vanaf de hoek; negatieve waarden laten het blad buiten de rand vallen. */
+  insetBlock?: string;
+  insetInline?: string;
+  /** Alleen in de hero: dat blad staat boven de fold en mag niet lazy laden. */
+  eager?: boolean;
+  class?: string;
+}
+
+const {
+  name,
+  at,
+  width,
+  rotate,
+  insetBlock,
+  insetInline,
+  eager = false,
+  class: className,
+} = Astro.props;
+
+const leaf = LEAVES[name];
+
+// De width/height-attributen houden de natuurlijke verhouding vast; height: auto in
+// global.css rekent de hoogte uit. De ruimte staat dus al klaar voordat hij laadt: geen CLS.
+const styles = [
+  width !== undefined ? `--leaf-width:${width}px` : null,
+  insetBlock !== undefined ? `--leaf-inset-block:${insetBlock}` : null,
+  insetInline !== undefined ? `--leaf-inset-inline:${insetInline}` : null,
+  rotate !== undefined ? `--rest-rotate:${rotate}deg` : null,
+].filter((part): part is string => part !== null);
+---
+
+<img
+  class:list={['leaf', `leaf--${at}`, className]}
+  src={leaf.src}
+  width={leaf.width}
+  height={leaf.height}
+  style={styles.join(';')}
+  alt=""
+  aria-hidden="true"
+  loading={eager ? 'eager' : 'lazy'}
+  decoding="async"
+  data-reveal="grow"
+/>

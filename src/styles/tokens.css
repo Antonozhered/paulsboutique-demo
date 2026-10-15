@@ -39,7 +39,7 @@
   /* --- afgeleide tokens (niet uit de spec) --- */
   --c-wood: #EBDECA;                      /* fallback onder textures/wood-cream.jpg */
   --c-jungle-90: rgb(20 34 26 / 0.92);    /* sticky header */
-  --c-ink-20: rgb(27 27 24 / 0.2);        /* gedrukte binnenrand op de dealkaart */
+  --c-jungle-20: rgb(20 34 26 / 0.2);     /* gedrukte binnenrand op de dealkaart (spec: jungle 20%) */
 
   --shadow-card: 0 1px 2px rgb(10 18 13 / 0.18), 0 12px 28px -12px rgb(10 18 13 / 0.38);
   --shadow-sticker: 0 6px 16px -6px rgb(10 18 13 / 0.45);

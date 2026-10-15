@@ -1,0 +1,57 @@
+---
+/**
+ * SplitText.astro — kop die woord per woord uit een masker omhoog schuift.
+ *
+ * Twee kopieen van dezelfde tekst:
+ *  1. de volledige zin in `.sr-only` — dat is wat een schermlezer leest, in een stuk,
+ *     zonder dat de losse woorden als losse stukjes langskomen;
+ *  2. een `aria-hidden` kopie die per woord in een `overflow: hidden`-masker zit.
+ *
+ * Elk woord krijgt `--i` mee; motion.css zet daar 60 ms per woord op, bovenop de
+ * `delay`-prop. Zonder JS blijft `.js` weg, geldt de startstate niet en staat de kop
+ * er gewoon. Het blijft dus altijd een echte, leesbare kop.
+ */
+interface Props {
+  text: string;
+  /** Het echte element. Per pagina maar een h1; elke sectiekop is een h2. */
+  as?: 'h1' | 'h2' | 'h3' | 'p';
+  /** Woorden die peach worden. Een hele zin mag: die wordt op woorden gesplitst. */
+  highlight?: string | string[];
+  /** Extra vertraging in ms voor de hele kop. */
+  delay?: number;
+  class?: string;
+  id?: string;
+}
+
+const { text, as: Tag = 'h2', highlight, delay, class: className, id } = Astro.props;
+
+const words = text.split(/\s+/).filter((word) => word.length > 0);
+
+// Een highlight mag een los woord of een hele zin zijn ("Wij ook."): alles wordt plat
+// geslagen tot een verzameling woorden, zodat de vergelijking per woord werkt.
+const highlighted = new Set(
+  (Array.isArray(highlight) ? highlight : highlight === undefined ? [] : [highlight])
+    .flatMap((part) => part.split(/\s+/))
+    .filter((word) => word.length > 0)
+);
+
+const styles = delay !== undefined ? `--delay:${delay}ms` : undefined;
+---
+
+<Tag class:list={['split', className]} id={id} style={styles} data-reveal="split">
+  <span class="sr-only">{text}</span>
+  <span aria-hidden="true">
+    {
+      words.map((word, index) => (
+        <>
+          <span class="split__word" style={`--i:${index}`}>
+            <span class:list={['split__inner', { 'text-peach': highlighted.has(word) }]}>
+              {word}
+            </span>
+          </span>
+          {index < words.length - 1 ? <Fragment set:html="&#32;" /> : null}
+        </>
+      ))
+    }
+  </span>
+</Tag>

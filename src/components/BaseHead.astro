@@ -1,0 +1,63 @@
+---
+/**
+ * BaseHead.astro — alles in <head>: meta, Open Graph, stylesheets, en de .js-vlag.
+ *
+ * Deze demo mag NIET geindexeerd worden (het is een concept voor de eigenaar, geen
+ * officiele site). Daarom staat robots noindex/nofollow op elke pagina, naast
+ * public/robots.txt dat alles dichtzet. Beide, want een robots.txt verbiedt crawlen
+ * maar niet indexeren van een URL die elders gelinkt staat.
+ */
+import '../styles/global.css';
+import '../styles/motion.css';
+import heroBurger from '../assets/images/hero-burger.jpg';
+import { brand } from '../data/brand';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Afwijkende OG-afbeelding; standaard de heroburger. */
+  image?: ImageMetadata;
+}
+
+const { title, description, image = heroBurger } = Astro.props;
+
+// Een OG-afbeelding moet absoluut zijn. Zonder `site` in astro.config.mjs valt dit
+// terug op de huidige URL, zodat de build niet breekt op een ontbrekende config.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const ogImage = new URL(image.src, Astro.site ?? Astro.url);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+{/*
+  Zo vroeg mogelijk, en is:inline zodat er geen bundel op gewacht wordt: alle verborgen
+  startstates in motion.css hangen onder `html.js`. Komt deze regel te laat, dan zie je
+  content eerst staan en daarna wegspringen. Komt hij nooit (JS uit), dan staat de hele
+  pagina gewoon zichtbaar.
+*/}
+<script is:inline>document.documentElement.classList.add('js');</script>
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical.href} />
+
+<meta name="robots" content="noindex, nofollow" />
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={brand.name} />
+<meta property="og:locale" content="nl_BE" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical.href} />
+<meta property="og:image" content={ogImage.href} />
+<meta property="og:image:width" content={String(image.width)} />
+<meta property="og:image:height" content={String(image.height)} />
+<meta property="og:image:alt" content="Dagverse burger van Paul's op een oranje bord" />
+
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" content="#14221A" />

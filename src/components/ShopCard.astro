@@ -1,0 +1,87 @@
+---
+/**
+ * ShopCard.astro — een Kortrijkse shop: foto, adres, open-status, uren en drie acties.
+ *
+ * Alles wat iemand nodig heeft om nu te beslissen: is het open (OpenStatus), wanneer wel
+ * (HoursTable, met vandaag gemarkeerd), en dan in een tap bellen, de route openen of
+ * bestellen. Bestel opent de OrderSheet op deze shop (data-order-open met het shop-id).
+ *
+ * Een shop zonder foto (Expo) krijgt op dezelfde plek een blad op jungle, met dezelfde
+ * verhouding: zo staan beide kaarten naast elkaar even hoog en lijnen de urentabellen uit.
+ *
+ * De knoppen zeggen zichtbaar kort "Bel", "Route", "Bestel". Voor een schermlezer die
+ * alle links op de pagina overloopt, staat de shopnaam er in .sr-only bij: anders hoort
+ * die twee keer "Bel" zonder te weten welke.
+ *
+ * OpenStatus hydrateert pas als de kaart in beeld komt (client:visible): de hero heeft de
+ * status van de hoofdshop al meteen, deze twee mogen wachten tot iemand naar beneden scrolt.
+ */
+import { Picture } from 'astro:assets';
+import type { Shop } from '../data/shops';
+import { telHref } from '../lib/format';
+import HoursTable from './HoursTable.astro';
+import Leaves from './Leaves.astro';
+import OpenStatus from './OpenStatus.tsx';
+
+interface Props {
+  shop: Shop;
+  /** Plaats in de lijst, voor de stagger van de reveal. */
+  index?: number;
+}
+
+const { shop, index = 0 } = Astro.props;
+
+const titleId = `shop-${shop.id}-title`;
+---
+
+<article
+  class="card shop-card"
+  aria-labelledby={titleId}
+  data-reveal="up"
+  style={`--i:${Math.min(index, 6)}`}
+>
+  {
+    shop.image ? (
+      <div class="frame shop-card__media">
+        <Picture
+          src={shop.image}
+          alt={shop.imageAlt ?? `Gevel van ${shop.name}`}
+          formats={['avif', 'webp']}
+          widths={[400, 640, 960]}
+          sizes="(min-width: 1184px) 560px, (min-width: 900px) calc((100vw - 56px) / 2), calc(100vw - 32px)"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    ) : (
+      <div class="shop-card__media shop-card__media--leaf">
+        <Leaves name="palm-monstera" at="br" rotate={-6} />
+      </div>
+    )
+  }
+
+  <div class="shop-card__body">
+    <h3 class="shop-card__title" id={titleId}>{shop.name}</h3>
+
+    <address class="shop-card__address">
+      {shop.street}<br />
+      {shop.postal}&nbsp;{shop.city}<br />
+      <span class="tabular">{shop.phoneDisplay}</span>
+    </address>
+
+    {shop.hours && <OpenStatus hours={shop.hours} className="pill" client:visible />}
+    {shop.hours && <HoursTable hours={shop.hours} shopName={shop.name} />}
+
+    <div class="shop-card__actions">
+      <a class="btn btn--ghost" href={telHref(shop.phone)}>
+        Bel<span class="sr-only"> {shop.name}</span>
+      </a>
+      <a class="btn btn--ghost" href={shop.mapsUrl} target="_blank" rel="noopener">
+        Route<span class="sr-only"> naar {shop.name}</span>
+      </a>
+      <button type="button" class="btn btn--primary" data-order-open={shop.id}>
+        Bestel<span class="sr-only"> bij {shop.name}</span>
+      </button>
+    </div>
+  </div>
+</article>

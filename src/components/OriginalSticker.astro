@@ -1,0 +1,30 @@
+---
+/**
+ * OriginalSticker.astro — "The Original", de ronde sticker met het handschrift.
+ *
+ * Dit is de enige plek in het hele project waar Caveat mag staan (zie de spec: niet in
+ * de studentdeal, niet in de koppen). Hij ligt over de rechterbovenhoek van de
+ * heroefoto en staat 12 graden schuin.
+ *
+ * Positionering gebeurt door de ouder (.hero__sticker in global.css), niet hier: zo kan
+ * dezelfde sticker later ook elders liggen zonder dat deze component dat moet weten.
+ */
+import Sticker from './Sticker.astro';
+
+interface Props {
+  size?: number;
+  delay?: number;
+  class?: string;
+}
+
+const { size = 110, delay = 500, class: className } = Astro.props;
+---
+
+<Sticker
+  price="The Original"
+  hand
+  size={size}
+  rotate={12}
+  delay={delay}
+  class={className}
+/>

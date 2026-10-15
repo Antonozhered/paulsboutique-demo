@@ -1,0 +1,153 @@
+---
+/**
+ * MenuSection.astro — "Onze burgers" (#menu): de papieren menukaart als sectie.
+ *
+ * De enige crème sectie op de homepage, want dit is het papier van de kaart. Alle prijzen
+ * en namen komen uit data/menu.ts (oktober 2026); hier wordt niets verzonnen.
+ *
+ * Menufilter, progressieve verbetering:
+ *  - zonder JS staan alle categorieen er en zijn de chips verborgen (html:not(.js) in
+ *    global.css), want een filterknop die niets doet is erger dan geen filterknop;
+ *  - met JS zijn de chips <button aria-pressed> die op tag filteren, met een korte fade
+ *    tussen twee staten (motion.css) en een beleefde live-melding voor schermlezers.
+ *
+ * Een categorie zonder treffers verdwijnt helemaal, kop en upgradebox inbegrepen.
+ */
+import { brand } from '../data/brand';
+import { allergyNote, menu, menuFilters, menuFootnote, upgrade } from '../data/menu';
+import { getShop } from '../data/shops';
+import { telHref } from '../lib/format';
+import MenuItem from './MenuItem.astro';
+import SplitText from './SplitText.astro';
+
+// Allergievragen gaan naar de hoofdshop, dezelfde als de status in de hero.
+const shop = getShop('kortrijk-centrum');
+---
+
+<section id="menu" class="section section--cream menu" aria-labelledby="menu-title">
+  <div class="container">
+    <header class="section-head">
+      <SplitText as="h2" id="menu-title" text="Onze burgers" />
+      <p class="menu__updated">Menu bijgewerkt: {brand.menuUpdated}</p>
+    </header>
+
+    <div class="chips menu__filters" role="group" aria-label="Filter de burgers" data-menu-filters>
+      {
+        menuFilters.map((filter, index) => (
+          <button
+            type="button"
+            class="chip"
+            aria-pressed={index === 0 ? 'true' : 'false'}
+            data-filter={(filter.tags ?? []).join(' ')}
+          >
+            {filter.label}
+          </button>
+        ))
+      }
+    </div>
+
+    <p class="sr-only" aria-live="polite" data-menu-status></p>
+
+    <div class="menu__results" data-menu-results>
+      {
+        menu.map((category) => (
+          <section class="menu-category" data-menu-category>
+            <h3 class="menu-category__title">{category.title}</h3>
+
+            <ul class="menu-list" role="list">
+              {category.items.map((item, index) => (
+                <MenuItem item={item} index={index} />
+              ))}
+            </ul>
+
+            {upgrade.category === category.id && (
+              <div class="menu-upgrade">
+                <h4 class="menu-upgrade__title">{upgrade.title}</h4>
+                <ul class="menu-upgrade__list" role="list">
+                  {upgrade.options.map((option) => (
+                    <li>{option}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        ))
+      }
+    </div>
+
+    <div class="menu__footer">
+      <p>{menuFootnote}</p>
+      <button type="button" class="btn btn--primary" data-order-open>Bestel</button>
+      <p class="menu__allergy">
+        {allergyNote}
+        <Fragment set:html="&#32;" />
+        {shop && <a class="link" href={telHref(shop.phone)}>Bel {shop.phoneDisplay}</a>}
+      </p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const filters = document.querySelector<HTMLElement>('[data-menu-filters]');
+  const results = document.querySelector<HTMLElement>('[data-menu-results]');
+  const status = document.querySelector<HTMLElement>('[data-menu-status]');
+
+  if (filters && results) {
+    const buttons = Array.from(filters.querySelectorAll<HTMLButtonElement>('button[data-filter]'));
+    const categories = Array.from(results.querySelectorAll<HTMLElement>('[data-menu-category]'));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /** Zelfde duur als de fade op .menu__results in motion.css (--dur-fast). */
+    const FADE_MS = 180;
+    let pending = 0;
+
+    /** Toont alleen burgers met minstens een van deze tags ([] = alles); geeft het aantal terug. */
+    const apply = (tags: string[]): number => {
+      let shown = 0;
+      for (const category of categories) {
+        let shownInCategory = 0;
+        for (const item of category.querySelectorAll<HTMLElement>('[data-tags]')) {
+          const itemTags = (item.dataset.tags ?? '').split(' ');
+          const match = tags.length === 0 || tags.some((tag) => itemTags.includes(tag));
+          item.hidden = !match;
+          if (match) shownInCategory += 1;
+        }
+        category.hidden = shownInCategory === 0;
+        shown += shownInCategory;
+      }
+      return shown;
+    };
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        if (button.getAttribute('aria-pressed') === 'true') return;
+        for (const other of buttons) {
+          other.setAttribute('aria-pressed', String(other === button));
+        }
+
+        const tags = (button.dataset.filter ?? '').split(' ').filter((tag) => tag.length > 0);
+        const label = button.textContent?.trim() ?? '';
+
+        const swap = () => {
+          const count = apply(tags);
+          results.dataset.filtering = 'false';
+          if (status) {
+            status.textContent =
+              tags.length === 0
+                ? `Alle ${count} burgers`
+                : `${count} ${count === 1 ? 'burger' : 'burgers'}: ${label}`;
+          }
+        };
+
+        window.clearTimeout(pending);
+        if (reduceMotion.matches) {
+          swap();
+          return;
+        }
+        // Uitfaden, wisselen terwijl de lijst onzichtbaar is, en weer infaden.
+        results.dataset.filtering = 'true';
+        pending = window.setTimeout(swap, FADE_MS);
+      });
+    }
+  }
+</script>

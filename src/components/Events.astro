@@ -1,0 +1,50 @@
+---
+/**
+ * Events.astro — "Burgers on the move" (#events): de foodtruck voor feesten en events.
+ *
+ * Een duidelijke vraag (een offerte) met twee manieren om ze te stellen: mailen met het
+ * onderwerp al ingevuld, of bellen. Daaronder een regel over de tacotruck van zusterzaak
+ * Manuel Kartel, met een klikbaar nummer.
+ *
+ * Er is nog geen foto van de foodtruck. Tot die er is, dragen het philodendronblad en een
+ * grote, uitgelijnde "ON THE MOVE" in Oswald de sectie. Die tekst is pure decoratie
+ * (aria-hidden) en staat onder de inhoud, nooit achter een zin.
+ */
+import { events } from '../data/shops';
+import { mailtoHref, telHref } from '../lib/format';
+import Leaves from './Leaves.astro';
+import SplitText from './SplitText.astro';
+
+const quoteHref = mailtoHref(events.email, 'Offerte foodtruck');
+---
+
+<section id="events" class="section events" aria-labelledby="events-title">
+  {/* TODO: foto van de foodtruck (aan te leveren door de eigenaar); vervangt dan de decoratie. */}
+  <Leaves name="philodendron" at="tr" rotate={-8} />
+
+  <div class="container">
+    <div class="events__content">
+      <SplitText as="h2" id="events-title" text="Burgers on the move" highlight="on the move" />
+
+      <p class="lead">
+        Verjaardag, personeelsfeest of bedrijfsevent? Onze foodtruck rijdt voor met dagverse
+        burgers en een groot aanbod vegetarisch.
+      </p>
+      <p>Vertel ons de datum, de plek en hoeveel hongerige magen er zijn. Wij maken een offerte.</p>
+
+      <div class="cluster events__actions">
+        <a class="btn btn--primary" href={quoteHref}>Vraag een offerte</a>
+        <a class="btn btn--ghost" href={telHref(events.phone)}>Bel {events.phoneDisplay}</a>
+      </div>
+
+      <p class="events__taco">
+        Liever taco's? Bel de tacotruck van zusterzaak Manuel Kartel:<Fragment set:html="&#32;" />
+        <a class="link link--inline tabular" href={telHref(events.tacoTruckPhone)}>
+          {events.tacoTruckPhoneDisplay}
+        </a>
+      </p>
+    </div>
+
+    <div class="events__deco" aria-hidden="true">On the move</div>
+  </div>
+</section>

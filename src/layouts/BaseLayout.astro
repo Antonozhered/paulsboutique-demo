@@ -1,0 +1,59 @@
+---
+/**
+ * BaseLayout.astro — het documentskelet van elke pagina.
+ *
+ * De taal staat op nl-BE: dit is een Belgisch-Nederlandse site en een schermlezer moet
+ * "Dagverse burgers" met de juiste stem lezen, niet met een Engelse.
+ *
+ * De skiplink is het eerste focusbare element en springt naar <main>, zodat iemand met
+ * een toetsenbord niet eerst door de hele navigatie moet.
+ *
+ * De footer staat buiten <main>: alleen daar is hij de contentinfo-landmark van de pagina.
+ * De ActionBar is opt-in (alleen de homepage); de body krijgt dan de klasse has-actionbar,
+ * zodat global.css onderaan ruimte vrijhoudt en de balk nooit inhoud bedekt.
+ */
+import ActionBar from '../components/ActionBar.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Uit op pagina's met een eigen kop. */
+  header?: boolean;
+  /** Uit op pagina's met een eigen voet. */
+  footer?: boolean;
+  /** Mobiele balk Bestel · Bel · Route. Alleen de homepage, nooit /vergelijking. */
+  actionBar?: boolean;
+}
+
+const { title, description, header = true, footer = true, actionBar = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="nl-BE">
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
+
+  <body class:list={[{ 'has-actionbar': actionBar }]}>
+    <a class="skip-link" href="#main">Naar de inhoud</a>
+
+    {header && <Header />}
+
+    <main id="main">
+      <slot />
+    </main>
+
+    {footer && <Footer />}
+    {actionBar && <ActionBar />}
+
+    <script>
+      // Alle reveals op de pagina, een observer. Dit is een module-script: het loopt
+      // pas als de DOM er staat, dus er valt niets te missen.
+      import { initReveal } from '../lib/reveal';
+      initReveal();
+    </script>
+  </body>
+</html>

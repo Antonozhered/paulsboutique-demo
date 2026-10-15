@@ -1,0 +1,59 @@
+---
+/**
+ * MenuItem.astro — een regel van de menukaart: naam ........ prijs, beschrijving eronder.
+ *
+ * Zoals op de papieren kaart: de naam in Courier Prime, de prijs rechts uitgelijnd met
+ * tabular-nums en een stippellijn ertussen (vanaf 360px, global.css). "Favoriet" en
+ * "Veggie" zijn zichtbare tekstbadges, nooit alleen een kleur.
+ *
+ * `data-tags` is waar de menufilter in MenuSection op filtert. `--i` is de plaats in de
+ * lijst voor de stagger van de reveal, gecapt op 6 zodat een lange lijst nooit lang wacht.
+ * De prijs zelf beweegt nooit (motion.css); alleen de regel als geheel komt binnen.
+ */
+import type { MenuItem as MenuItemData } from '../data/menu';
+import { formatPrice } from '../lib/format';
+
+interface Props {
+  item: MenuItemData;
+  /** Plaats in de categorie, voor de stagger. */
+  index?: number;
+}
+
+const { item, index = 0 } = Astro.props;
+
+const veggie = item.tags.includes('veggie');
+---
+
+<li
+  class="menu-item"
+  data-tags={item.tags.join(' ')}
+  data-reveal="up"
+  style={`--i:${Math.min(index, 6)}`}
+>
+  {/*
+    De spatie voor elke badge staat er expliciet: Astro schrapt witruimte rond een
+    regeleinde naast een tag, en dan leest een schermlezer "ManifestoFavoriet".
+  */}
+  <span class="menu-item__name">
+    {item.name}
+    {
+      item.favorite && (
+        <>
+          <Fragment set:html="&#32;" />
+          <span class="badge badge--favorite">Favoriet</span>
+        </>
+      )
+    }
+    {
+      veggie && (
+        <>
+          <Fragment set:html="&#32;" />
+          <span class="badge badge--veggie">Veggie</span>
+        </>
+      )
+    }
+  </span>
+  <span class="menu-item__leader" aria-hidden="true"></span>
+  <span class="menu-item__price">{formatPrice(item.price)}</span>
+  {item.description && <span class="menu-item__desc">{item.description}</span>}
+</li>

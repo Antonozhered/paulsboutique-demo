@@ -1,0 +1,91 @@
+---
+/**
+ * Homepage.
+ *
+ * Volgorde zoals in de spec: Hero, marquee, Studentdeal (#studentdeal), Menu (#menu),
+ * Sfeer, Shops (#shops), marquee andersom, Events (#events). De Header, de Footer
+ * (#contact) en de ActionBar komen uit BaseLayout; de OrderSheet staat hier, want alleen
+ * deze pagina heeft bestelknoppen.
+ *
+ * Drie sectieachtergronden en niet meer: jungle, bottle, en crème voor het menu (het
+ * papier van de kaart), plus de oranje marqueebanden.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Atmosphere from '../components/Atmosphere.astro';
+import Events from '../components/Events.astro';
+import Hero from '../components/Hero.astro';
+import Marquee from '../components/Marquee.astro';
+import MenuSection from '../components/MenuSection.astro';
+import OrderSheet from '../components/OrderSheet.astro';
+import OtherShops from '../components/OtherShops.astro';
+import ShopCard from '../components/ShopCard.astro';
+import SplitText from '../components/SplitText.astro';
+import StudentDeal from '../components/StudentDeal.astro';
+import { getShop, primaryShops } from '../data/shops';
+
+/** De favorieten van de zaak, zoals ze op de marqueeband lopen. */
+const FAVORITES = [
+  'Manifesto',
+  'Hot Marley',
+  'London Calling',
+  'Moby Dick',
+  'Bhoom',
+  'Magic Mushroom',
+  'Beyond',
+];
+
+// De tweede band roept het nummer van de hoofdshop, zoals onderaan de papieren kaart.
+const phoneDisplay = getShop('kortrijk-centrum')?.phoneDisplay ?? '';
+
+const CALL_TO_ORDER = [
+  'Bel & bestel',
+  phoneDisplay,
+  'Dagvers',
+  'Groot aanbod vegetarisch',
+  'The Original',
+].filter((item) => item.length > 0);
+---
+
+<BaseLayout
+  title="Paul's Fresh Food Boutique · Dagverse burgers in Kortrijk"
+  description="Dagverse burgers, ciabatta's en een groot aanbod vegetarisch. Bekijk het menu, zie of we nu open zijn en bestel in een tap."
+  actionBar
+>
+  <Hero />
+
+  <Marquee
+    items={FAVORITES}
+    srLabel="Een greep uit onze burgers: Manifesto, Hot Marley, London Calling, Moby Dick, Bhoom, Magic Mushroom en Beyond."
+  />
+
+  <StudentDeal />
+
+  <MenuSection />
+
+  <Atmosphere />
+
+  <section id="shops" class="section section--bottle shops" aria-labelledby="shops-title">
+    <div class="container">
+      <header class="section-head">
+        <SplitText as="h2" id="shops-title" text="Twee keer Kortrijk" highlight="Kortrijk" />
+        <p class="lead">Kijk of we open zijn, bel even of plan je route.</p>
+      </header>
+
+      <div class="shops__grid">
+        {primaryShops.map((shop, index) => <ShopCard shop={shop} index={index} />)}
+      </div>
+
+      <OtherShops />
+    </div>
+  </section>
+
+  <Marquee
+    items={CALL_TO_ORDER}
+    reverse
+    srLabel={`Bel en bestel op ${phoneDisplay}. Dagvers, groot aanbod vegetarisch, The Original.`}
+  />
+
+  <Events />
+
+  <OrderSheet />
+</BaseLayout>

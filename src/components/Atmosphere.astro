@@ -1,0 +1,94 @@
+---
+/**
+ * Atmosphere.astro — "Eten in de jungle": de zaak zelf, in vier foto's.
+ *
+ * Dit is het bewijs voor doel 4 (de site ziet eruit als de zaak): de mural met de gouden
+ * zon, de mosterdgele kussens, de spiegelwand en het terras. Mobiel een horizontale rij
+ * met scroll-snap waarin de volgende foto al piept; vanaf 900px een raster van vier.
+ * De foto's staan om beurten 1,5 graad schuin (via --rest-rotate, zodat de reveal erop
+ * landt in plaats van ze recht te trekken).
+ *
+ * Bewust geen reviewcitaten: alleen een knop naar de echte reviews op Google.
+ *
+ * De rij is een scrollcontainer zonder links of knoppen erin. tabindex="0" maakt hem
+ * met het toetsenbord scrollbaar; role="region" en het label zeggen wat het is.
+ */
+import { Picture } from 'astro:assets';
+import muralLogo from '../assets/images/interior/mural-logo.jpg';
+import muralSeating from '../assets/images/interior/mural-seating.jpg';
+import mirrorRoom from '../assets/images/interior/mirror-room.jpg';
+import terras from '../assets/images/interior/terras.jpg';
+import { brand } from '../data/brand';
+import SplitText from './SplitText.astro';
+
+interface Photo {
+  src: ImageMetadata;
+  alt: string;
+}
+
+const PHOTOS: Photo[] = [
+  {
+    src: muralLogo,
+    alt: "Donkere junglemuur met de gouden zon en de chef van Paul's, boven mosterdgele kussens en groene tegeltafels",
+  },
+  {
+    src: muralSeating,
+    alt: 'Crèmekleurige monsterabladeren op de junglemuur, met mosterdgele kussens en kaarsjes op een groene tegeltafel',
+  },
+  {
+    src: mirrorRoom,
+    alt: 'Flessengroene wand met spiegels en kaarsjes, met een tegeltafel en houten krukken ervoor',
+  },
+  {
+    src: terras,
+    alt: 'Palmen en groene picknicktafels op het terras voor de deur',
+  },
+];
+
+/** Om beurten links en rechts, nooit meer dan 1,5 graad: speels, niet scheef. */
+const tilt = (index: number) => (index % 2 === 0 ? -1.5 : 1.5);
+---
+
+<section class="section atmosphere" aria-labelledby="atmosphere-title">
+  <div class="container">
+    <header class="section-head">
+      <SplitText as="h2" id="atmosphere-title" text="Eten in de jungle" highlight="jungle" />
+      <p class="lead">
+        Kaarsjes op tafel, een jungle op de muur en groene picknicktafels op het terras: schuif
+        maar aan.
+      </p>
+    </header>
+
+    <div class="atmosphere__scroller" tabindex="0" role="region" aria-label="Foto's van de zaak">
+      <ul class="atmosphere__strip" role="list">
+        {
+          PHOTOS.map((photo, index) => (
+            <li
+              class="atmosphere__item"
+              data-reveal="up"
+              style={`--i:${Math.min(index, 6)};--rest-rotate:${tilt(index)}deg`}
+            >
+              <div class="frame atmosphere__photo">
+                <Picture
+                  src={photo.src}
+                  alt={photo.alt}
+                  formats={['avif', 'webp']}
+                  widths={[320, 480, 640, 800]}
+                  sizes="(min-width: 1184px) 270px, (min-width: 900px) calc((100vw - 104px) / 4), min(72vw, 20rem)"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="atmosphere__cta">
+      <a class="btn btn--ghost" href={brand.googleReviewsUrl} target="_blank" rel="noopener">
+        Lees de reviews op Google
+      </a>
+    </div>
+  </div>
+</section>

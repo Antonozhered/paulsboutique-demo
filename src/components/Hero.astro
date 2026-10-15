@@ -1,0 +1,85 @@
+---
+/**
+ * Hero.astro — het eerste scherm: open of niet, de studentdeal, en bestellen.
+ *
+ * De drie dingen die een hongerige klant wil weten staan boven de kop, niet eronder:
+ * is het open, wat is de deal, en waar tap ik om te bestellen.
+ *
+ * De heroefoto is het LCP-element. Hij staat in een .frame met een vaste
+ * aspect-ratio (ruimte gereserveerd, geen CLS), laadt eager met hoge priority, en
+ * animeert alleen met transform — nooit opacity, want dan zou LCP pas aan het einde van
+ * de animatie gemeten worden.
+ */
+import { Image } from 'astro:assets';
+import heroBurger from '../assets/images/hero-burger.jpg';
+import { brand } from '../data/brand';
+import { studentDeal } from '../data/deals';
+import { getShop } from '../data/shops';
+import { formatPriceCompact } from '../lib/format';
+import Leaves from './Leaves.astro';
+import OpenStatus from './OpenStatus.tsx';
+import OriginalSticker from './OriginalSticker.astro';
+import SplitText from './SplitText.astro';
+
+// De status in de hero is die van de hoofdshop: die bepaalt of "nu open" klopt.
+const centrum = getShop('kortrijk-centrum');
+---
+
+<section class="section hero" aria-labelledby="hero-title">
+  <Leaves name="monstera-palm" at="tr" rotate={8} eager />
+  <Leaves name="banana-outline" at="bl" rotate={-10} eager />
+
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <div class="hero__status cluster" data-reveal="up">
+        <OpenStatus hours={centrum?.hours} className="pill" client:load />
+
+        <a class="pill hero__deal-pill" href="#studentdeal">
+          Studentdeal&nbsp;{formatPriceCompact(studentDeal.price)}
+        </a>
+      </div>
+
+      <SplitText
+        text="Honger? Wij ook."
+        as="h1"
+        id="hero-title"
+        highlight="Wij ook."
+        class="hero__title"
+      />
+
+      <p class="eyebrow hero__tagline" data-reveal="up" style="--delay:200ms">{brand.tagline}</p>
+
+      {/*
+        data-hero-cta: de ActionBar schuift pas binnen als dit blok uit beeld is.
+        data-order-open (zonder shop-id): opent de OrderSheet op de standaardshop.
+      */}
+      <div class="cluster hero__actions" data-reveal="up" style="--delay:300ms" data-hero-cta>
+        <button type="button" class="btn btn--primary" data-order-open>Bestel</button>
+        <a class="btn btn--ghost" href="#menu">Bekijk het menu</a>
+      </div>
+    </div>
+
+    <div class="hero__media">
+      {/*
+        data-reveal zonder bekende waarde = alleen een haak voor .is-visible, zonder
+        verborgen startstate. Zo zoomt de foto wel in (motion.css) maar fade hij niet:
+        verplicht voor het LCP-element.
+      */}
+      <div class="frame hero__photo" data-reveal="lcp">
+        <Image
+          src={heroBurger}
+          alt="Dagverse burger met friet op een oranje bord bij Paul's"
+          widths={[480, 800, 1200, 2000]}
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          loading="eager"
+          fetchpriority="high"
+          decoding="sync"
+        />
+      </div>
+
+      <div class="hero__sticker">
+        <OriginalSticker />
+      </div>
+    </div>
+  </div>
+</section>

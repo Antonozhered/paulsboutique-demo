@@ -1,0 +1,197 @@
+---
+/**
+ * Header.astro — sticky kop met logo, navigatie en het mobiele overlaymenu.
+ *
+ * Boven de pagina is de balk doorzichtig, zodat de hero vol in beeld staat. Na het
+ * scrollen krijgt hij `data-scrolled="true"` en daarmee een jungle-achtergrond met blur
+ * (global.css), zodat de navigatie leesbaar blijft boven foto's.
+ *
+ * De actieve sectie wordt met een IntersectionObserver gemarkeerd met
+ * `aria-current="true"` op de bijhorende link — in beide navigaties tegelijk.
+ *
+ * Mobiel: een ronde knop van 48px opent een jungle-overlay met grote koppen. De knop
+ * draagt aria-expanded en aria-controls; Escape en een klik op een link sluiten het
+ * menu en de focus gaat terug naar de knop.
+ */
+import { Image } from 'astro:assets';
+import logo from '../assets/images/logo.png';
+import { brand } from '../data/brand';
+import Leaves from './Leaves.astro';
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const NAV: NavItem[] = [
+  { label: 'Menu', href: '#menu' },
+  { label: 'Studentdeal', href: '#studentdeal' },
+  { label: 'Shops', href: '#shops' },
+  { label: 'Events', href: '#events' },
+  { label: 'Contact', href: '#contact' },
+];
+
+const LOGO_HEIGHT = 40;
+const logoWidth = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
+---
+
+{/*
+  Peilbaken van 1px bovenaan het document. Zodra het uit beeld scrolt, staat de header
+  "vast" en krijgt hij zijn achtergrond. Betrouwbaarder dan window.scrollY: de pagina
+  zet overflow-x: clip op html en body, en dan is niet gegarandeerd welk element de
+  scrollpositie draagt.
+*/}
+<div class="header-sentinel" aria-hidden="true" data-header-sentinel></div>
+
+<header class="site-header" data-scrolled="false" data-site-header>
+  <div class="container">
+    <a class="site-logo" href="/" aria-label={`${brand.name} – home`}>
+      {/* alt="" : de toegankelijke naam staat op de link, anders leest een schermlezer hem twee keer. */}
+      <Image src={logo} alt="" height={LOGO_HEIGHT} width={logoWidth} loading="eager" />
+    </a>
+
+    <nav class="site-nav" aria-label="Hoofdnavigatie">
+      {NAV.map((item) => <a href={item.href} data-nav-link>{item.label}</a>)}
+    </nav>
+
+    <button
+      type="button"
+      class="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-overlay"
+      aria-label="Menu openen"
+      data-nav-toggle
+    >
+      <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M1 1h20M1 8h20M1 15h20"></path>
+        </g>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="nav-overlay" id="nav-overlay" aria-label="Menu" hidden data-nav-overlay>
+    <button
+      type="button"
+      class="nav-overlay__close nav-toggle"
+      aria-label="Menu sluiten"
+      data-nav-close
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M2 2l14 14M16 2L2 16"></path>
+        </g>
+      </svg>
+    </button>
+
+    {NAV.map((item) => <a href={item.href} data-nav-link>{item.label}</a>)}
+
+    <Leaves name="palm-monstera" at="br" width={300} rotate={-8} />
+  </nav>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  const overlay = document.querySelector<HTMLElement>('[data-nav-overlay]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const closeButton = document.querySelector<HTMLButtonElement>('[data-nav-close]');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'));
+
+  /* --- 1. Achtergrond van de balk ---------------------------------------- */
+
+  const sentinel = document.querySelector<HTMLElement>('[data-header-sentinel]');
+
+  if (header && sentinel && typeof IntersectionObserver !== 'undefined') {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        header.dataset.scrolled = String(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+  } else if (header) {
+    // Geen IntersectionObserver: terugvallen op de scrollpositie.
+    const syncScrolled = () => {
+      header.dataset.scrolled = String(window.scrollY > 8);
+    };
+    syncScrolled();
+    window.addEventListener('scroll', syncScrolled, { passive: true });
+  }
+
+  /* --- 2. Mobiel overlaymenu --------------------------------------------- */
+
+  if (overlay && toggle) {
+    const setOpen = (open: boolean) => {
+      overlay.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      // Het label beschrijft wat de knop nu doet, niet in welke staat hij staat.
+      toggle.setAttribute('aria-label', open ? 'Menu sluiten' : 'Menu openen');
+      // Achtergrond niet mee laten scrollen zolang het menu open staat.
+      document.documentElement.style.overflow = open ? 'hidden' : '';
+      if (open) {
+        overlay.querySelector<HTMLElement>('a, button')?.focus();
+      } else {
+        // De focus hoort terug naar het element dat het menu opende.
+        toggle.focus();
+      }
+    };
+
+    toggle.addEventListener('click', () => setOpen(overlay.hidden));
+    closeButton?.addEventListener('click', () => setOpen(false));
+
+    // Een link sluit het menu: de pagina springt naar de sectie eronder.
+    for (const link of overlay.querySelectorAll('a')) {
+      link.addEventListener('click', () => setOpen(false));
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !overlay.hidden) setOpen(false);
+    });
+
+    // Van telefoon naar desktop draaien terwijl het menu open staat: de desktopnav
+    // neemt het over, dus het overlay moet dicht en de scroll weer vrij.
+    const wide = window.matchMedia('(min-width: 768px)');
+    wide.addEventListener('change', (event) => {
+      if (event.matches && !overlay.hidden) setOpen(false);
+    });
+  }
+
+  /* --- 3. Actieve sectie ------------------------------------------------- */
+
+  const sections = links
+    .map((link) => link.hash)
+    .filter((hash, index, all) => hash.length > 1 && all.indexOf(hash) === index)
+    .map((hash) => document.querySelector<HTMLElement>(hash))
+    .filter((section): section is HTMLElement => section !== null);
+
+  if (sections.length > 0 && typeof IntersectionObserver !== 'undefined') {
+    const active = new Set<string>();
+
+    const paint = () => {
+      // Bij meerdere secties in de band wint de bovenste in documentorde: dat is de
+      // sectie waar de lezer net in gescrold is.
+      const current = sections.find((section) => active.has(section.id))?.id;
+      for (const link of links) {
+        if (current !== undefined && link.hash === `#${current}`) {
+          link.setAttribute('aria-current', 'true');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      }
+    };
+
+    // Een smalle band onder de sticky header: wat daar staat, is "waar je bent".
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) active.add(entry.target.id);
+          else active.delete(entry.target.id);
+        }
+        paint();
+      },
+      { rootMargin: '-25% 0px -65% 0px', threshold: 0 }
+    );
+
+    for (const section of sections) observer.observe(section);
+  }
+</script>
