@@ -1,0 +1,47 @@
+---
+/**
+ * FindingsTable.astro — "Wat we vonden → Wat het voor jou betekent".
+ *
+ * Een echte tabel: elke vaststelling is de rijkop van wat ze voor de zaak betekent, zodat
+ * een schermlezer bij de betekenis ook zegt waar ze bij hoort. De tabel krijgt zijn naam
+ * van de sectiekop (labelledBy) in plaats van een tweede, identieke caption.
+ *
+ * Desktop: twee kolommen met een pijl ertussen. Telefoon: per rij de vaststelling met de
+ * betekenis eronder, want twee kolommen van 140px lezen niet. Dat stapelen zet display op
+ * de tabelelementen, en dan gooit Safari de tabelsemantiek weg. De rollen staan er daarom
+ * expliciet bij: overbodig voor andere browsers, nodig voor VoiceOver.
+ */
+import type { Finding } from '../../data/comparison';
+
+interface Props {
+  findings: Finding[];
+  /** id van de kop die de tabel benoemt. */
+  labelledBy: string;
+}
+
+const { findings, labelledBy } = Astro.props;
+---
+
+<div class="findings" data-reveal="up">
+  <table class="findings__table" role="table" aria-labelledby={labelledBy}>
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Wat we vonden</th>
+        <th scope="col" role="columnheader">Wat het voor jou betekent</th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      {
+        findings.map((finding) => (
+          <tr role="row">
+            <th scope="row" role="rowheader">{finding.found}</th>
+            <td role="cell">
+              <span class="findings__arrow" aria-hidden="true">→</span>
+              {finding.meaning}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

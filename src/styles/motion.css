@@ -322,6 +322,29 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * 10c. Vergelijking — scorebalken en technische details
+ * ------------------------------------------------------------------------- */
+
+/* Een scorebalk groeit uit zijn begin zodra zijn kaart onthuld is, net na de kaart zelf.
+ * Alleen de balk: het getal ernaast staat er meteen. --i erft hij van de kaart, dus de
+ * balken volgen dezelfde stagger. Zonder JS (geen .js) staan ze gewoon vol. */
+.js .score__fill {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-transform, 900ms) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 80ms + 250ms);
+}
+
+.js .is-visible .score__fill {
+  transform: none;
+}
+
+/* Het pijltje bij "Technische details" draait mee als het paneel opengaat. */
+.compare-details__icon {
+  transition: rotate var(--dur-fast, 180ms) var(--ease-out);
+}
+
+/* ---------------------------------------------------------------------------
  * 11. Reduced motion — last block in the file, and it wins
  * ------------------------------------------------------------------------- */
 
@@ -368,6 +391,12 @@
   .js .menu__results,
   .js .menu__results[data-filtering='true'] {
     opacity: 1 !important;
+    transition: none !important;
+  }
+
+  /* Scorebalken staan meteen op hun waarde. */
+  .js .score__fill {
+    transform: none !important;
     transition: none !important;
   }
 

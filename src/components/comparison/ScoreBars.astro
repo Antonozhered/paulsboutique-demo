@@ -1,0 +1,57 @@
+---
+/**
+ * ScoreBars.astro — de Lighthouse-scores (mobiel), oude site tegenover nieuwe site.
+ *
+ * Het getal staat er altijd als tekst; de balk is alleen een beeld van dat getal
+ * (aria-hidden). Per meting een lijst van twee termen: "Oude site" / score en
+ * "Nieuwe site" / score, zodat een schermlezer de paren samen voorleest.
+ *
+ * De scores zijn nog TODO (data/comparison.ts). Een ontbrekende score is "volgt" met een
+ * lege balk, nooit een nul: een nul zou zeggen dat er gemeten is.
+ */
+import type { ScoreMetric } from '../../data/comparison';
+
+interface Props {
+  metrics: ScoreMetric[];
+}
+
+const { metrics } = Astro.props;
+
+const SIDES: { key: 'old' | 'next'; label: string }[] = [
+  { key: 'old', label: 'Oude site' },
+  { key: 'next', label: 'Nieuwe site' },
+];
+
+/** Hoe vol de balk staat, van 0 tot 1. */
+function fill(value: number | null, max: number): number {
+  if (value === null || !Number.isFinite(value) || max <= 0) return 0;
+  return Math.min(Math.max(value / max, 0), 1);
+}
+---
+
+<ul class="scores" role="list">
+  {
+    metrics.map((metric, index) => (
+      <li class="score" data-reveal="up" style={`--i:${Math.min(index, 6)}`}>
+        <h3 class="score__label">{metric.label}</h3>
+
+        <dl class="score__rows">
+          {SIDES.map(({ key, label }) => {
+            const value = metric[key];
+            return (
+              <div class:list={['score__row', `score__row--${key}`]}>
+                <dt class:list={['compare-label', `compare-label--${key}`]}>{label}</dt>
+                <dd class:list={['score__value', { 'score__value--pending': value === null }]}>
+                  {value === null ? 'volgt' : value}
+                </dd>
+                <dd class="score__track" aria-hidden="true">
+                  <span class="score__fill" style={`--score:${fill(value, metric.max)}`} />
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </li>
+    ))
+  }
+</ul>

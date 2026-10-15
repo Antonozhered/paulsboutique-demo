@@ -1,0 +1,84 @@
+---
+/**
+ * TaskCompare.astro — een vraag van een hongerige klant, op de oude en op de nieuwe site.
+ *
+ * Twee kolommen naast elkaar, ook op een telefoon: het verschil moet je in een oogopslag
+ * zien. Per kant een screenshot, de tijd tot het antwoord en een zin uitleg.
+ *
+ * Screenshots en tijden zijn nog TODO (data/comparison.ts). Zolang ze ontbreken staat er
+ * "Screenshot volgt" en "Tijd volgt": nooit een verzonnen cijfer. Het lege vak heeft al de
+ * maat van de screenshot die erin komt, zodat er niets verspringt als hij er is.
+ */
+import { Picture } from 'astro:assets';
+import type { CompareSide, CompareTask } from '../../data/comparison';
+
+interface Props {
+  task: CompareTask;
+  /** Plaats in de lijst: het vraagnummer en de stagger van de reveal. */
+  index?: number;
+}
+
+const { task, index = 0 } = Astro.props;
+
+const titleId = `task-${task.id}-title`;
+
+const SIDES: { key: 'old' | 'next'; label: string; side: CompareSide }[] = [
+  { key: 'old', label: 'Oude site', side: task.old },
+  { key: 'next', label: 'Nieuwe site', side: task.next },
+];
+
+// Belgische notatie: 2,5 seconden, niet 2.5.
+const secondsFormat = new Intl.NumberFormat('nl-BE', { maximumFractionDigits: 1 });
+---
+
+<article
+  class="task"
+  aria-labelledby={titleId}
+  data-reveal="up"
+  style={`--i:${Math.min(index, 6)}`}
+>
+  <header class="task__head">
+    <p class="eyebrow">Vraag {index + 1}</p>
+    <h3 class="task__question" id={titleId}>{task.question}</h3>
+  </header>
+
+  <div class="task__sides">
+    {
+      SIDES.map(({ key, label, side }) => (
+        <div class:list={['task-side', `task-side--${key}`]}>
+          <h4 class:list={['compare-label', `compare-label--${key}`]}>{label}</h4>
+
+          {side.image ? (
+            <div class="frame compare-shot">
+              <Picture
+                src={side.image.src}
+                alt={side.image.alt}
+                formats={['avif', 'webp']}
+                widths={[240, 360, 480, 720]}
+                sizes="(min-width: 1100px) 12rem, (min-width: 640px) 18rem, calc(50vw - 24px)"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          ) : (
+            <div class="compare-slot">Screenshot volgt</div>
+          )}
+
+          <p class="task-side__time">
+            {side.seconds === null ? (
+              <span class="task-side__unit">Tijd volgt</span>
+            ) : (
+              <>
+                <span class="task-side__seconds">{secondsFormat.format(side.seconds)}</span>
+                <Fragment set:html="&#32;" />
+                <span class="task-side__unit">{side.seconds === 1 ? 'seconde' : 'seconden'}</span>
+              </>
+            )}
+          </p>
+
+          <p class="task-side__note">{side.note}</p>
+        </div>
+      ))
+    }
+  </div>
+</article>

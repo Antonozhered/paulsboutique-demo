@@ -10,8 +10,12 @@
  * Elk woord krijgt `--i` mee; motion.css zet daar 60 ms per woord op, bovenop de
  * `delay`-prop. Zonder JS blijft `.js` weg, geldt de startstate niet en staat de kop
  * er gewoon. Het blijft dus altijd een echte, leesbare kop.
+ *
+ * Een '\n' in de tekst begint een nieuwe regel, alleen in de zichtbare kopie. Elke regel
+ * wordt een eigen blok dat apart gebalanceerd wordt (de twee zinnen op /vergelijking).
  */
 interface Props {
+  /** De kop. Een '\n' zet de woorden erna op een nieuwe regel. */
   text: string;
   /** Het echte element. Per pagina maar een h1; elke sectiekop is een h2. */
   as?: 'h1' | 'h2' | 'h3' | 'p';
@@ -25,9 +29,18 @@ interface Props {
 
 const { text, as: Tag = 'h2', highlight, delay, class: className, id } = Astro.props;
 
-const words = text.split(/\s+/).filter((word) => word.length > 0);
+// Een schermlezer hoort een zin: de regelbreuken worden gewone spaties.
+const spoken = text.replace(/\s*\n\s*/g, ' ');
 
-// Een highlight mag een los woord of een hele zin zijn ("Wij ook."): alles wordt plat
+// Regels van woorden, met een doorlopende index: de stagger loopt over de regels heen door.
+let wordCount = 0;
+const lines = text
+  .split('\n')
+  .map((line) => line.split(/\s+/).filter((word) => word.length > 0))
+  .filter((line) => line.length > 0)
+  .map((line) => line.map((word) => ({ word, index: wordCount++ })));
+
+// Een highlight mag een los woord of een hele zin zijn ("We got you."): alles wordt plat
 // geslagen tot een verzameling woorden, zodat de vergelijking per woord werkt.
 const highlighted = new Set(
   (Array.isArray(highlight) ? highlight : highlight === undefined ? [] : [highlight])
@@ -38,19 +51,28 @@ const highlighted = new Set(
 const styles = delay !== undefined ? `--delay:${delay}ms` : undefined;
 ---
 
-<Tag class:list={['split', className]} id={id} style={styles} data-reveal="split">
-  <span class="sr-only">{text}</span>
+<Tag
+  class:list={['split', { 'split--lines': lines.length > 1 }, className]}
+  id={id}
+  style={styles}
+  data-reveal="split"
+>
+  <span class="sr-only">{spoken}</span>
   <span aria-hidden="true">
     {
-      words.map((word, index) => (
-        <>
-          <span class="split__word" style={`--i:${index}`}>
-            <span class:list={['split__inner', { 'text-peach': highlighted.has(word) }]}>
-              {word}
-            </span>
-          </span>
-          {index < words.length - 1 ? <Fragment set:html="&#32;" /> : null}
-        </>
+      lines.map((line) => (
+        <span class="split__line">
+          {line.map(({ word, index }, position) => (
+            <>
+              <span class="split__word" style={`--i:${index}`}>
+                <span class:list={['split__inner', { 'text-peach': highlighted.has(word) }]}>
+                  {word}
+                </span>
+              </span>
+              {position < line.length - 1 ? <Fragment set:html="&#32;" /> : null}
+            </>
+          ))}
+        </span>
       ))
     }
   </span>

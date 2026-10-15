@@ -1,12 +1,24 @@
 /**
  * Data voor /vergelijking: de oude site (2015, Adobe Muse) naast de nieuwe demo.
- * Alleen vaststellingen, geen gemeten cijfers. Elke null hieronder is een TODO.
+ * Alleen vaststellingen, geen gemeten cijfers. Elke null hieronder is een TODO; de pagina
+ * toont dan "volgt" in plaats van een verzonnen cijfer of een lege plek.
+ *
+ * Een screenshot invullen: zet het bestand ergens onder src/assets/images/, importeer het
+ * bovenaan zoals muralSeating en vul `{ src, alt }` in. De alt-tekst zegt in het Nederlands
+ * wat er op de screenshot te zien is.
  */
+import muralSeating from '../assets/images/interior/mural-seating.jpg';
+
+export interface CompareImage {
+  src: ImageMetadata;
+  /** Wat staat er op de afbeelding, in het Nederlands. */
+  alt: string;
+}
 
 export interface CompareSide {
   note: string;
   seconds: number | null;
-  image: string | null;
+  image: CompareImage | null;
 }
 
 export interface CompareTask {
@@ -80,14 +92,14 @@ export const tasks: CompareTask[] = [
     id: 'prijs-manifesto',
     question: 'Wat kost een Manifesto?',
     old: {
-      note: 'De klant leest € 14 op de oude site en hoort in de zaak € 16,50. Hij moet het navragen.',
+      note: 'De klant leest € 14 op de oude site en hoort in de zaak € 16,50. Hij moet het navragen.',
       // TODO: meet hoelang deze taak op de oude site duurt (seconden)
       seconds: null,
       // TODO: screenshot van de oude site bij deze vraag
       image: null,
     },
     next: {
-      note: 'De klant vindt € 16,50 in het menu op de site, dezelfde prijs als op de papieren kaart.',
+      note: 'De klant vindt € 16,50 in het menu op de site, dezelfde prijs als op de papieren kaart.',
       // TODO: meet hoelang deze taak op de nieuwe site duurt (seconden)
       seconds: null,
       // TODO: screenshot van de nieuwe site bij deze vraag
@@ -140,14 +152,17 @@ export const lighthouse: ScoreMetric[] = [
 export const identity: {
   title: string;
   caption: string;
-  oldImage: string | null;
-  newImage: string;
+  oldImage: CompareImage | null;
+  newImage: CompareImage;
 } = {
   title: 'Huisstijl',
   caption: 'Wat klanten online zien vs. wat ze in de zaak zien.',
   // TODO: screenshot van de oude site
   oldImage: null,
-  newImage: 'mural-seating.jpg',
+  newImage: {
+    src: muralSeating,
+    alt: 'De zaak vandaag: crèmekleurige monsterabladeren op een donkergroene junglemuur, mosterdgele kussens, een groene tegeltafel met kaarsjes en houten krukken',
+  },
 };
 
 export const findingsTitle: string = 'Wat we vonden → Wat het voor jou betekent';
@@ -160,7 +175,7 @@ export const findings: Finding[] = [
   },
   {
     id: 'verouderde-prijzen',
-    found: 'Menu en prijzen zijn verouderd (een Manifesto kost online € 14, in de zaak € 16,50)',
+    found: 'Menu en prijzen zijn verouderd (een Manifesto kost online € 14, in de zaak € 16,50)',
     meaning: 'Klanten zien prijzen die niet kloppen.',
   },
   {
@@ -181,7 +196,7 @@ export const findings: Finding[] = [
   {
     id: 'adobe-muse',
     found: 'Gebouwd in Adobe Muse (stopgezet sinds 2020)',
-    meaning: 'Prijzen of uren aanpassen is bijna onmogelijk; de site zegt nog © 2015.',
+    meaning: 'Prijzen of uren aanpassen is bijna onmogelijk; de site zegt nog © 2015.',
   },
   {
     id: 'titels-zijn-afbeeldingen',

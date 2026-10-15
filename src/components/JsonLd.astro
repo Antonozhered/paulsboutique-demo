@@ -1,0 +1,105 @@
+---
+/**
+ * JsonLd.astro — gestructureerde data voor Google: een Restaurant per Kortrijkse shop.
+ *
+ * Alles komt uit dezelfde data als de shopkaarten en de footer (data/shops.ts): naam,
+ * adres en telefoonnummer staan zo overal letterlijk hetzelfde, en dat is wat Google
+ * vertrouwt. De uren komen uit dezelfde WeekHours als de open-status en de urentabel.
+ *
+ * De studentdeal is een Offer op elke shop die in data/deals.ts bij de deal staat. Alleen
+ * wat vaststaat: naam, wat erin zit en de prijs. Geen voorwaarden of geldigheid, die zijn
+ * nog niet bevestigd.
+ *
+ * Absolute URL's hebben `site` nodig (astro.config.mjs, op Netlify automatisch). Zonder
+ * valt het terug op de URL van de build, net als de canonical in BaseHead.
+ *
+ * Staat alleen op de homepage, via slot="head" van BaseLayout.
+ */
+import { brand } from '../data/brand';
+import { studentDeal } from '../data/deals';
+import { primaryShops, reservationsAvailable, type Shop } from '../data/shops';
+import { formatTime } from '../lib/format';
+import { DAYS, type Day, type WeekHours } from '../lib/hours';
+
+const home = new URL('/', Astro.site ?? Astro.url);
+
+const SCHEMA_DAYS: Record<Day, string> = {
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+  sun: 'Sunday',
+};
+
+/**
+ * WeekHours -> openingHoursSpecification. Dagen met precies dezelfde shift worden een
+ * regel ("di, wo, do 11:30–14:30"); een gesplitste dag geeft twee regels; een gesloten dag
+ * staat er niet in. Een shift over middernacht blijft gewoon "18:00–02:00": zo leest Google
+ * hem ook. Een einde om 24:00 wordt 23:59, want 24:00 is geen geldige schema.org-tijd.
+ */
+function openingHours(hours: WeekHours) {
+  const shifts = new Map<string, { opens: string; closes: string; days: string[] }>();
+  for (const day of DAYS) {
+    for (const [start, end] of hours[day]) {
+      const opens = formatTime(start);
+      const closes = formatTime(end) === '24:00' ? '23:59' : formatTime(end);
+      const key = `${opens}-${closes}`;
+      const shift = shifts.get(key) ?? { opens, closes, days: [] };
+      shift.days.push(SCHEMA_DAYS[day]);
+      shifts.set(key, shift);
+    }
+  }
+  return Array.from(shifts.values(), ({ opens, closes, days }) => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: days,
+    opens,
+    closes,
+  }));
+}
+
+const dealOffer = {
+  '@type': 'Offer',
+  name: studentDeal.title,
+  description: studentDeal.includes,
+  price: studentDeal.price.toFixed(2),
+  priceCurrency: 'EUR',
+  url: new URL('#studentdeal', home).href,
+};
+
+function restaurant(shop: Shop) {
+  return {
+    '@type': 'Restaurant',
+    '@id': new URL(`#${shop.id}`, home).href,
+    name: shop.name,
+    brand: { '@type': 'Brand', name: brand.name },
+    url: home.href,
+    telephone: shop.phone,
+    ...(shop.email ? { email: shop.email } : {}),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: shop.street,
+      postalCode: shop.postal,
+      addressLocality: shop.city,
+      addressCountry: 'BE',
+    },
+    ...(shop.hours ? { openingHoursSpecification: openingHours(shop.hours) } : {}),
+    servesCuisine: ['Burgers', 'Vegetarisch'],
+    priceRange: '€€',
+    hasMenu: new URL('#menu', home).href,
+    acceptsReservations: reservationsAvailable,
+    ...(studentDeal.shops.includes(shop.id) ? { makesOffer: dealOffer } : {}),
+  };
+}
+
+const data = {
+  '@context': 'https://schema.org',
+  '@graph': primaryShops.map(restaurant),
+};
+
+// JSON in een <script>: een '<' wordt <, zodat de tekst "</script>" er nooit uit kan breken.
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<script is:inline type="application/ld+json" set:html={json} />

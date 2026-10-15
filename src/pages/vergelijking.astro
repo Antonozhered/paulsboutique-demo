@@ -1,0 +1,213 @@
+---
+/**
+ * /vergelijking — de oude site naast de nieuwe, voor het gesprek met de eigenaar.
+ *
+ * Rustig, op crème, als een gedrukt verslag: geen marquee, geen bestelknoppen en geen
+ * actiebalk. Alle tekst komt uit data/comparison.ts. Ontbreekt een screenshot, tijd of
+ * score nog (TODO), dan staat er "volgt": nooit een verzonnen cijfer.
+ *
+ * Een eigen, smalle kop in plaats van de sitekop: die linkt naar secties van de homepage
+ * (#menu, #shops ...) en is gemaakt om doorzichtig over de donkere hero te liggen. Hier is
+ * terug naar de nieuwe site genoeg. Hij gaat via slot="header" naar BaseLayout, voor <main>.
+ *
+ * Volgorde zoals in de spec: intro, drie vragen, Lighthouse, huisstijl, bevindingen met de
+ * technische details, en als slot "Wat je krijgt". Dat slot staat op jungle: de pagina
+ * landt zo in de huisstijl van de nieuwe site, net boven de footer.
+ */
+import { Image, Picture } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Leaves from '../components/Leaves.astro';
+import SplitText from '../components/SplitText.astro';
+import FindingsTable from '../components/comparison/FindingsTable.astro';
+import ScoreBars from '../components/comparison/ScoreBars.astro';
+import TaskCompare from '../components/comparison/TaskCompare.astro';
+import logo from '../assets/images/logo.png';
+import { brand } from '../data/brand';
+import {
+  benefits,
+  benefitsTitle,
+  findings,
+  findingsTitle,
+  identity,
+  intro,
+  lighthouse,
+  lighthouseTitle,
+  tasks,
+  tasksTitle,
+  technicalDetails,
+  technicalTitle,
+} from '../data/comparison';
+
+const LOGO_HEIGHT = 40;
+const logoWidth = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
+
+// Een zin per regel: "Je zaak ziet eruit als 2025." / "Je website als 2015."
+const headline = intro.headline.replace(/\.\s+/, '.\n');
+
+// "Wat we vonden →" / "Wat het voor jou betekent": de pijl sluit de eerste regel af, net
+// zoals de twee kolommen van de tabel eronder.
+const findingsHeading = findingsTitle.replace(/\s*→\s*/, ' →\n');
+
+// De voordelen staan in kleine letters in de data; als losse regels beginnen ze met een hoofdletter.
+const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+// Twee panelen naast elkaar in een kolom van max 44rem (global.css).
+const IDENTITY_SIZES = '(min-width: 640px) 24rem, calc(50vw - 24px)';
+---
+
+<BaseLayout
+  title="Oude site vs. nieuwe site · Paul's Fresh Food Boutique"
+  description="Je zaak ziet eruit als 2025, je website als 2015. Wat we vonden op de oude site en wat de nieuwe site anders doet."
+  header={false}
+>
+  <header slot="header" class="compare-header" data-surface="paper">
+    <div class="container compare-header__inner">
+      <a class="site-logo" href="/" aria-label={`${brand.name} – home`}>
+        {/* alt="": de toegankelijke naam staat op de link. */}
+        <Image
+          src={logo}
+          alt=""
+          width={logoWidth}
+          height={LOGO_HEIGHT}
+          densities={[1.5, 2]}
+          loading="eager"
+        />
+      </a>
+      <a class="btn btn--ghost compare-header__cta" href="/">Bekijk de nieuwe site</a>
+    </div>
+  </header>
+
+  <div class="section section--cream compare">
+    <div class="container">
+      <header class="compare-intro">
+        <p class="eyebrow">Oude site vs. nieuwe site</p>
+        <SplitText as="h1" id="compare-title" text={headline} class="compare-intro__title" />
+        <p class="lead">{intro.lead}</p>
+      </header>
+
+      <section class="compare-block" aria-labelledby="tasks-title">
+        <header class="section-head">
+          <SplitText as="h2" id="tasks-title" text={tasksTitle} />
+        </header>
+
+        <div class="compare-tasks">
+          {tasks.map((task, index) => <TaskCompare task={task} index={index} />)}
+        </div>
+      </section>
+
+      <section class="compare-block" aria-labelledby="lighthouse-title">
+        <header class="section-head">
+          <SplitText as="h2" id="lighthouse-title" text={lighthouseTitle} />
+          <p>
+            Lighthouse is de test van Google voor snelheid, toegankelijkheid en vindbaarheid.
+            Scores op 100: hoger is beter.
+          </p>
+        </header>
+
+        <ScoreBars metrics={lighthouse} />
+      </section>
+
+      <section class="compare-block" aria-labelledby="identity-title">
+        <header class="section-head">
+          <SplitText as="h2" id="identity-title" text={identity.title} />
+        </header>
+
+        <figure class="compare-identity" data-reveal="up">
+          <div class="compare-identity__panels">
+            <div class="compare-identity__panel">
+              <p class="compare-label compare-label--old">Online</p>
+              {
+                identity.oldImage ? (
+                  <div class="frame compare-shot">
+                    <Picture
+                      src={identity.oldImage.src}
+                      alt={identity.oldImage.alt}
+                      formats={['avif', 'webp']}
+                      widths={[320, 480, 640, 800]}
+                      sizes={IDENTITY_SIZES}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                ) : (
+                  <div class="compare-slot">Screenshot van de oude site volgt</div>
+                )
+              }
+            </div>
+
+            <div class="compare-identity__panel">
+              <p class="compare-label compare-label--next">In de zaak</p>
+              <div class="frame compare-shot">
+                <Picture
+                  src={identity.newImage.src}
+                  alt={identity.newImage.alt}
+                  formats={['avif', 'webp']}
+                  widths={[320, 480, 640, 800]}
+                  sizes={IDENTITY_SIZES}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </div>
+          </div>
+
+          <figcaption>{identity.caption}</figcaption>
+        </figure>
+      </section>
+
+      <section class="compare-block" aria-labelledby="findings-title">
+        <header class="section-head">
+          <SplitText as="h2" id="findings-title" text={findingsHeading} />
+        </header>
+
+        <FindingsTable findings={findings} labelledBy="findings-title" />
+
+        <details class="compare-details">
+          <summary>
+            {technicalTitle}
+            <svg
+              class="compare-details__icon"
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M2 5l5 5 5-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </summary>
+          <ul>
+            {technicalDetails.map((detail) => <li>{detail}</li>)}
+          </ul>
+        </details>
+      </section>
+    </div>
+  </div>
+
+  <section class="section compare-benefits" aria-labelledby="benefits-title">
+    <Leaves name="philodendron" at="tr" rotate={-8} />
+
+    <div class="container">
+      <SplitText as="h2" id="benefits-title" text={benefitsTitle} highlight="krijgt" />
+
+      <ul class="compare-benefits__list" role="list">
+        {
+          benefits.map((benefit, index) => (
+            <li data-reveal="up" style={`--i:${Math.min(index, 6)}`}>
+              {capitalize(benefit)}
+            </li>
+          ))
+        }
+      </ul>
+
+      <a class="btn btn--primary" href="/">Bekijk de nieuwe site</a>
+    </div>
+  </section>
+</BaseLayout>

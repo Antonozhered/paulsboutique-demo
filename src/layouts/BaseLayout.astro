@@ -9,8 +9,13 @@
  * een toetsenbord niet eerst door de hele navigatie moet.
  *
  * De footer staat buiten <main>: alleen daar is hij de contentinfo-landmark van de pagina.
+ * Om dezelfde reden komt een eigen kop (header={false} plus slot="header") voor <main> te
+ * staan en niet erin: zo blijft hij de banner-landmark.
  * De ActionBar is opt-in (alleen de homepage); de body krijgt dan de klasse has-actionbar,
  * zodat global.css onderaan ruimte vrijhoudt en de balk nooit inhoud bedekt.
+ *
+ * Slots: de standaardslot is de inhoud van <main>; slot="head" komt achter BaseHead in
+ * <head> (de JSON-LD van de homepage); slot="header" is de eigen kop van een pagina.
  */
 import ActionBar from '../components/ActionBar.astro';
 import BaseHead from '../components/BaseHead.astro';
@@ -35,12 +40,14 @@ const { title, description, header = true, footer = true, actionBar = false } = 
 <html lang="nl-BE">
   <head>
     <BaseHead title={title} description={description} />
+    <slot name="head" />
   </head>
 
   <body class:list={[{ 'has-actionbar': actionBar }]}>
     <a class="skip-link" href="#main">Naar de inhoud</a>
 
     {header && <Header />}
+    <slot name="header" />
 
     <main id="main">
       <slot />
